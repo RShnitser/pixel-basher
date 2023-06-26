@@ -1,4 +1,6 @@
 import { useRef, useEffect } from "react";
+import { Buttons, ButtonState, GameInput, GameState } from "../game/game_types";
+import { gameUpdate } from "../game/game";
 
 type WebGPU = {
   device: GPUDevice;
@@ -10,38 +12,6 @@ type WebGPU = {
   indexBuffer: GPUBuffer;
   uniformBuffer: GPUBuffer;
   uniformValues: Float32Array;
-};
-
-const Buttons = {
-  MOVE_LEFT: 0,
-  MOVE_RIGHT: 1,
-} as const;
-
-type Buttons = (typeof Buttons)[keyof typeof Buttons];
-
-type ButtonState = {
-  isDown: boolean;
-  changed: boolean;
-};
-
-type GameInput = {
-  deltaTime: number;
-  buttons: ButtonState[];
-};
-
-const isButtonDown = (button: ButtonState) => {
-  const result = button.isDown;
-  return result;
-};
-
-const isButtonPressed = (button: ButtonState) => {
-  const result = button.isDown && button.changed;
-  return result;
-};
-
-const isButtonReleased = (button: ButtonState) => {
-  const result = !button.isDown && button.changed;
-  return result;
 };
 
 const Canvas = () => {
@@ -62,6 +32,25 @@ const Canvas = () => {
       },
     ],
   });
+  const gameState = useRef<GameState>({
+    playerPosition: { x: 0, y: 0 },
+  });
+
+  const processInput = (key: string, isDown: boolean) => {
+    if (key === "ArrowLeft") {
+      processKeyboardState(
+        gameInput.current.buttons[Buttons.MOVE_LEFT],
+        isDown
+      );
+    }
+
+    if (key === "ArrowRight") {
+      processKeyboardState(
+        gameInput.current.buttons[Buttons.MOVE_RIGHT],
+        isDown
+      );
+    }
+  };
 
   const processKeyboardState = (button: ButtonState, isDown: boolean) => {
     if (button.isDown !== isDown) {
@@ -72,46 +61,37 @@ const Canvas = () => {
 
   const handleKeyUp = (e: KeyboardEvent) => {
     const key = e.key;
-    if (key === "ArrowLeft") {
-      processKeyboardState(gameInput.current.buttons[Buttons.MOVE_LEFT], false);
-    }
+    // if (key === "ArrowLeft") {
+    //   processKeyboardState(gameInput.current.buttons[Buttons.MOVE_LEFT], false);
+    // }
 
-    if (key === "ArrowRight") {
-      //processKeyboardState(gameInput.current.buttons[1], false);
-    }
+    // if (key === "ArrowRight") {
+    //   //processKeyboardState(gameInput.current.buttons[1], false);
+    // }
+    processInput(key, false);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
     const key = e.key;
 
-    if (key === "ArrowLeft") {
-      processKeyboardState(gameInput.current.buttons[Buttons.MOVE_LEFT], true);
-    }
+    // if (key === "ArrowLeft") {
+    //   processKeyboardState(gameInput.current.buttons[Buttons.MOVE_LEFT], true);
+    // }
 
-    if (key === "ArrowRight") {
-      //processKeyboardState(gameInput.current.buttons[1], true);
-    }
+    // if (key === "ArrowRight") {
+    //   //processKeyboardState(gameInput.current.buttons[1], true);
+    // }
+    processInput(key, true);
   };
 
   const update = () => {
     const now = performance.now();
 
     if (webGPU.current) {
-      render(webGPU.current);
-
       gameInput.current.deltaTime = now - prevTime.current;
 
-      if (isButtonPressed(gameInput.current.buttons[Buttons.MOVE_LEFT])) {
-        console.log("left pressed");
-      }
-
-      if (isButtonDown(gameInput.current.buttons[Buttons.MOVE_LEFT])) {
-        console.log("left down");
-      }
-
-      if (isButtonReleased(gameInput.current.buttons[Buttons.MOVE_LEFT])) {
-        console.log("left up");
-      }
+      gameUpdate(gameState.current, gameInput.current);
+      render(webGPU.current);
 
       for (let i = 0; i < gameInput.current.buttons.length; i++) {
         gameInput.current.buttons[i].changed = false;
@@ -171,19 +151,25 @@ const Canvas = () => {
     const device = await adapter.requestDevice();
 
     const shaders = `
+        struct Uniforms {
+          color: vec4f,
+          resolution: vec2f,
+          translation: vec2f
+        }
+
         struct VertexOut {
         @builtin(position) position : vec4f,
         @location(0) color : vec4f
         }
 
-        @group(0) @binding(0) var<uniform> color: vec4f;
+        @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
         @vertex
         fn vertex_main(@location(0) position: vec4f) -> VertexOut
         {
         var output : VertexOut;
         output.position = position;
-        output.color = color;
+        output.color = uniforms.color;
         return output;
         }
 
@@ -273,11 +259,11 @@ const Canvas = () => {
     const renderPipeline = device.createRenderPipeline(pipelineDescriptor);
 
     const uniformBuffer = device.createBuffer({
-      size: 16,
+      size: 32,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
-    const uniformValues = new Float32Array([0, 0, 1, 1]);
+    const uniformValues = new Float32Array([0, 0, 1, 1, 800, 600, 0, 0]);
 
     const bindGroup = device.createBindGroup({
       layout: renderPipeline.getBindGroupLayout(0),
