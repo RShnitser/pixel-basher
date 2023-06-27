@@ -1,6 +1,12 @@
 import { useRef, useEffect } from "react";
 import { Buttons, ButtonState, GameInput, GameState } from "../game/game_types";
 import { gameUpdate } from "../game/game";
+import {
+  identityM3x3,
+  multiplyM3x3,
+  scaleM3x3,
+  translateM3x3,
+} from "../game/math";
 
 type WebGPU = {
   device: GPUDevice;
@@ -12,6 +18,7 @@ type WebGPU = {
   indexBuffer: GPUBuffer;
   uniformBuffer: GPUBuffer;
   uniformValues: Float32Array;
+  matrixValue: Float32Array;
 };
 
 const Canvas = () => {
@@ -88,7 +95,7 @@ const Canvas = () => {
     const now = performance.now();
 
     if (webGPU.current) {
-      gameInput.current.deltaTime = now - prevTime.current;
+      gameInput.current.deltaTime = (now - prevTime.current) * 0.001;
 
       gameUpdate(gameState.current, gameInput.current);
       render(webGPU.current);
@@ -113,6 +120,7 @@ const Canvas = () => {
     indexBuffer,
     uniformBuffer,
     uniformValues,
+    matrixValue,
   }: WebGPU) => {
     const commandEncoder = device.createCommandEncoder();
     const passEncoder = commandEncoder.beginRenderPass({
@@ -130,7 +138,27 @@ const Canvas = () => {
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.setVertexBuffer(0, vertexBuffer);
     passEncoder.setIndexBuffer(indexBuffer, "uint32");
+
+    const projection = {
+      data: new Float32Array([2 / 800, 0, 0, 0, -2 / 600, 0, -1, 1, 1]),
+    };
+
+    const matrix = multiplyM3x3(
+      projection,
+      translateM3x3(identityM3x3(), gameState.current.playerPosition)
+    ).data;
+
+    //console.log(matrix);
+    matrixValue.set([
+      ...matrix.slice(0, 3),
+      0,
+      ...matrix.slice(3, 6),
+      0,
+      ...matrix.slice(6, 9),
+      0,
+    ]);
     device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+
     passEncoder.drawIndexed(6);
     passEncoder.end();
 
@@ -153,8 +181,7 @@ const Canvas = () => {
     const shaders = `
         struct Uniforms {
           color: vec4f,
-          resolution: vec2f,
-          translation: vec2f
+          matrix: mat3x3f
         }
 
         struct VertexOut {
@@ -168,7 +195,10 @@ const Canvas = () => {
         fn vertex_main(@location(0) position: vec4f) -> VertexOut
         {
         var output : VertexOut;
-        output.position = position;
+
+        let clipSpace = (uniforms.matrix * vec3f(position.xy, 1)).xy;
+      
+        output.position = vec4f(clipSpace, 0.0, 1.0);
         output.color = uniforms.color;
         return output;
         }
@@ -200,8 +230,16 @@ const Canvas = () => {
       alphaMode: "premultiplied",
     });
 
+    // const vertices = new Float32Array([
+    //   -1, 1, 0,
+    //   1, 0, 1,
+    //   0, 1, -1,
+    //   -1, 0, 1,
+    //   0, -1, 0, 1,
+    // ]);
+
     const vertices = new Float32Array([
-      -1, 1, 0, 1, 0, 1, 0, 1, -1, -1, 0, 1, 0, -1, 0, 1,
+      0, 0, 0, 1, 30, 0, 0, 1, 0, 30, 0, 1, 30, 30, 0, 1,
     ]);
 
     const indexData = new Uint32Array([0, 1, 2, 1, 3, 2]);
@@ -259,11 +297,15 @@ const Canvas = () => {
     const renderPipeline = device.createRenderPipeline(pipelineDescriptor);
 
     const uniformBuffer = device.createBuffer({
-      size: 32,
+      size: 64,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
 
-    const uniformValues = new Float32Array([0, 0, 1, 1, 800, 600, 0, 0]);
+    const uniformValues = new Float32Array([
+      0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
+    ]);
+
+    const matrixValue = uniformValues.subarray(4, 16);
 
     const bindGroup = device.createBindGroup({
       layout: renderPipeline.getBindGroupLayout(0),
@@ -281,6 +323,7 @@ const Canvas = () => {
       indexBuffer,
       uniformBuffer,
       uniformValues,
+      matrixValue,
     };
   };
 

@@ -22,12 +22,12 @@ export const gameUpdate = (state: GameState, input: GameInput) => {
 
   if (isButtonDown(input.buttons[Buttons.MOVE_LEFT])) {
     //console.log("left down");
-    state.playerPosition.x -= 10 * input.deltaTime;
+    state.playerPosition.x -= 100 * input.deltaTime;
   }
 
   if (isButtonDown(input.buttons[Buttons.MOVE_RIGHT])) {
     //console.log("left down");
-    state.playerPosition.x += 10 * input.deltaTime;
+    state.playerPosition.x += 100 * input.deltaTime;
   }
 
   //   if (isButtonReleased(input.buttons[Buttons.MOVE_LEFT])) {

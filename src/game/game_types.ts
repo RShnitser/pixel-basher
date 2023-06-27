@@ -1,3 +1,5 @@
+import { v2 } from "./math_types";
+
 export const Buttons = {
   MOVE_LEFT: 0,
   MOVE_RIGHT: 1,
@@ -17,9 +19,4 @@ export type GameInput = {
 
 export type GameState = {
   playerPosition: v2;
-};
-
-export type v2 = {
-  x: number;
-  y: number;
 };
