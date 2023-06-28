@@ -140,7 +140,20 @@ const Canvas = () => {
     passEncoder.setIndexBuffer(indexBuffer, "uint32");
 
     const projection = {
-      data: new Float32Array([2 / 800, 0, 0, 0, -2 / 600, 0, -1, 1, 1]),
+      data: new Float32Array([
+        2 / 800,
+        0,
+        0,
+        0,
+        0,
+        -2 / 600,
+        0,
+        0,
+        -1,
+        1,
+        1,
+        0,
+      ]),
     };
 
     const matrix = multiplyM3x3(
@@ -149,14 +162,15 @@ const Canvas = () => {
     ).data;
 
     //console.log(matrix);
-    matrixValue.set([
-      ...matrix.slice(0, 3),
-      0,
-      ...matrix.slice(3, 6),
-      0,
-      ...matrix.slice(6, 9),
-      0,
-    ]);
+    // matrixValue.set([
+    //   ...matrix.slice(0, 3),
+    //   0,
+    //   ...matrix.slice(3, 6),
+    //   0,
+    //   ...matrix.slice(6, 9),
+    //   0,
+    // ]);
+    matrixValue.set(matrix);
     device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
 
     passEncoder.drawIndexed(6);
@@ -192,11 +206,11 @@ const Canvas = () => {
         @group(0) @binding(0) var<uniform> uniforms: Uniforms;
 
         @vertex
-        fn vertex_main(@location(0) position: vec4f) -> VertexOut
+        fn vertex_main(@location(0) position: vec2f) -> VertexOut
         {
         var output : VertexOut;
 
-        let clipSpace = (uniforms.matrix * vec3f(position.xy, 1)).xy;
+        let clipSpace = (uniforms.matrix * vec3f(position, 1)).xy;
       
         output.position = vec4f(clipSpace, 0.0, 1.0);
         output.color = uniforms.color;
@@ -238,9 +252,7 @@ const Canvas = () => {
     //   0, -1, 0, 1,
     // ]);
 
-    const vertices = new Float32Array([
-      0, 0, 0, 1, 30, 0, 0, 1, 0, 30, 0, 1, 30, 30, 0, 1,
-    ]);
+    const vertices = new Float32Array([0, 0, 30, 0, 0, 30, 30, 30]);
 
     const indexData = new Uint32Array([0, 1, 2, 1, 3, 2]);
 
@@ -264,10 +276,10 @@ const Canvas = () => {
           {
             shaderLocation: 0, // position
             offset: 0,
-            format: "float32x4",
+            format: "float32x2",
           },
         ],
-        arrayStride: 16,
+        arrayStride: 8,
         stepMode: "vertex",
       },
     ];
@@ -296,14 +308,14 @@ const Canvas = () => {
 
     const renderPipeline = device.createRenderPipeline(pipelineDescriptor);
 
-    const uniformBuffer = device.createBuffer({
-      size: 64,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-
     const uniformValues = new Float32Array([
       0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
     ]);
+
+    const uniformBuffer = device.createBuffer({
+      size: uniformValues.byteLength,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
 
     const matrixValue = uniformValues.subarray(4, 16);
 
