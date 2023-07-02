@@ -19,4 +19,15 @@ export type GameInput = {
 
 export type GameState = {
   playerPosition: v2;
+  blockPositions: v2[];
+  playerCount: number;
+  blockCount: number;
+
+  assets: GameAsset[];
+};
+
+export type GameAsset = {
+  //color: Float32Array;
+  vertexData: Float32Array;
+  indexData: Uint32Array;
 };
