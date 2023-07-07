@@ -9,6 +9,13 @@ export type v3 = {
   z: number;
 };
 
+export type v4 = {
+  x: number;
+  y: number;
+  z: number;
+  w: number;
+};
+
 export type m3x3 = {
   data: Float32Array;
 };
