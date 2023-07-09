@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { Buttons, ButtonState, GameInput, GameState } from "../game/game_types";
-import { gameUpdate } from "../game/game";
+import { createCircle, createRectangle, gameUpdate } from "../game/game";
 import { initWebGPU, beginRender, endRender } from "../game/renderer";
 import { RendererCommands, RendererCommand } from "../game/renderer_types";
 import { WebGPU } from "../game/renderer_types";
@@ -25,7 +25,7 @@ const Canvas = () => {
   });
   const gameState = useRef<GameState>({
     playerCount: 1,
-    playerPosition: { x: 0, y: 0 },
+    playerPosition: { x: 0, y: 100 },
     blockCount: 10,
     blockPositions: [
       { x: 100, y: 100 },
@@ -40,18 +40,20 @@ const Canvas = () => {
       { x: 300, y: 200 },
       { x: 400, y: 200 },
     ],
+    ballCount: 1,
+    ballPosition: { x: 0, y: 100 },
 
     assets: [
+      // {
+      //   vertexData: new Float32Array([0, 0, 30, 0, 0, 30, 30, 30]),
+      //   indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
+      // },
+      createRectangle(90, 30),
       {
-        //color: new Float32Array([0, 0, 1, 1]),
-        vertexData: new Float32Array([0, 0, 30, 0, 0, 30, 30, 30]),
-        indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
-      },
-      {
-        //color: new Float32Array([0, 1, 0, 1]),
         vertexData: new Float32Array([0, 0, 90, 0, 0, 30, 90, 30]),
         indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
       },
+      createCircle(10, 8),
     ],
   });
   const commands = useRef<RendererCommands>({

@@ -145,6 +145,21 @@ export const initWebGPU = async (
 
   objectBuffers.push(blockBuffers);
 
+  const ballBuffers: ObjectBuffers = {
+    vertexBuffer: createBuffer(
+      device,
+      assets[2].vertexData,
+      GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+    ),
+    indexBuffer: createBuffer(
+      device,
+      assets[2].indexData,
+      GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+    ),
+  };
+
+  objectBuffers.push(ballBuffers);
+
   //const playerData = gameState.current.assets[0];
   // device.queue.writeBuffer(
   //   playerBuffers.vertexBuffer,

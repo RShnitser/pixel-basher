@@ -22,6 +22,8 @@ export type GameState = {
   blockPositions: v2[];
   playerCount: number;
   blockCount: number;
+  ballCount: number;
+  ballPosition: v2;
 
   assets: GameAsset[];
 };
