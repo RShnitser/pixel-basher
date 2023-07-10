@@ -81,6 +81,22 @@ export const gameUpdate = (
     state.playerPosition.x += 100 * input.deltaTime;
   }
 
+  if (isButtonPressed(input.buttons[Buttons.RELEASE_BALL])) {
+    console.log("click");
+    if (!state.isBallReleased) {
+      state.isBallReleased = true;
+      state.ballVelocity.y = -100;
+    }
+  }
+
+  if (state.isBallReleased) {
+    state.ballPosition.x += state.ballVelocity.x * input.deltaTime;
+    state.ballPosition.y += state.ballVelocity.y * input.deltaTime;
+  } else {
+    state.ballPosition.x = state.playerPosition.x;
+    state.ballPosition.y = state.playerPosition.y - 20;
+  }
+
   //   if (isButtonReleased(input.buttons[Buttons.MOVE_LEFT])) {
   //     console.log("left up");
   //   }
@@ -100,7 +116,7 @@ export const gameUpdate = (
   pushObject(
     commands,
     2,
-    state.playerPosition,
+    state.ballPosition,
     { x: 1, y: 1, z: 1, w: 1 },
     state.assets
   );

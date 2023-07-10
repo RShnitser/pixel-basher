@@ -3,6 +3,7 @@ import { v2 } from "./math_types";
 export const Buttons = {
   MOVE_LEFT: 0,
   MOVE_RIGHT: 1,
+  RELEASE_BALL: 2,
 } as const;
 
 export type Buttons = (typeof Buttons)[keyof typeof Buttons];
@@ -24,6 +25,8 @@ export type GameState = {
   blockCount: number;
   ballCount: number;
   ballPosition: v2;
+  ballVelocity: v2;
+  isBallReleased: boolean;
 
   assets: GameAsset[];
 };

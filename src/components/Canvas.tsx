@@ -12,20 +12,14 @@ const Canvas = () => {
   const prevTime = useRef<number>(0);
   const gameInput = useRef<GameInput>({
     deltaTime: 16,
-    buttons: [
-      {
-        isDown: false,
-        changed: false,
-      },
-      {
-        isDown: false,
-        changed: false,
-      },
-    ],
+    buttons: Array.from({ length: 3 }, () => ({
+      isDown: false,
+      changed: false,
+    })),
   });
   const gameState = useRef<GameState>({
     playerCount: 1,
-    playerPosition: { x: 0, y: 100 },
+    playerPosition: { x: 400, y: 550 },
     blockCount: 10,
     blockPositions: [
       { x: 100, y: 100 },
@@ -42,6 +36,8 @@ const Canvas = () => {
     ],
     ballCount: 1,
     ballPosition: { x: 0, y: 100 },
+    ballVelocity: { x: 0, y: 0 },
+    isBallReleased: false,
 
     assets: [
       // {
@@ -49,10 +45,11 @@ const Canvas = () => {
       //   indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
       // },
       createRectangle(90, 30),
-      {
-        vertexData: new Float32Array([0, 0, 90, 0, 0, 30, 90, 30]),
-        indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
-      },
+      // {
+      //   vertexData: new Float32Array([0, 0, 90, 0, 0, 30, 90, 30]),
+      //   indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
+      // },
+      createRectangle(90, 30),
       createCircle(10, 8),
     ],
   });
@@ -87,6 +84,13 @@ const Canvas = () => {
     if (key === "ArrowRight") {
       processKeyboardState(
         gameInput.current.buttons[Buttons.MOVE_RIGHT],
+        isDown
+      );
+    }
+
+    if (key === " ") {
+      processKeyboardState(
+        gameInput.current.buttons[Buttons.RELEASE_BALL],
         isDown
       );
     }
