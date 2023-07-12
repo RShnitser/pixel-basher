@@ -7,6 +7,7 @@ import {
 } from "./game_types";
 import { pushObject } from "./renderer";
 import { RendererCommands } from "./renderer_types";
+import { v2 } from "./math_types";
 
 export const createRectangle = (width: number, height: number): GameAsset => {
   const hw = 0.5 * width;
@@ -47,6 +48,26 @@ export const createCircle = (radius: number, sides: number): GameAsset => {
   };
 };
 
+const checkCircleRectangleCollision = (
+  cc: v2,
+  cr: number,
+  rc: v2,
+  rw: number,
+  rh: number
+) => {
+  let result = false;
+  const left = rc.x - cr - rw * 0.5;
+  const right = rc.x + cr + rw * 0.5;
+  const top = rc.y - cr - rh * 0.5;
+  const bottom = rc.y + cr + rh * 0.5;
+
+  if (cc.x >= left && cc.x <= right && cc.y <= bottom && cc.y >= top) {
+    result = true;
+  }
+
+  return result;
+};
+
 const isButtonDown = (button: ButtonState) => {
   const result = button.isDown;
   return result;
@@ -73,51 +94,80 @@ export const gameUpdate = (
 
   if (isButtonDown(input.buttons[Buttons.MOVE_LEFT])) {
     //console.log("left down");
-    state.playerPosition.x -= 100 * input.deltaTime;
+    state.player.position.x -= 100 * input.deltaTime;
   }
 
   if (isButtonDown(input.buttons[Buttons.MOVE_RIGHT])) {
     //console.log("left down");
-    state.playerPosition.x += 100 * input.deltaTime;
+    state.player.position.x += 100 * input.deltaTime;
   }
 
   if (isButtonPressed(input.buttons[Buttons.RELEASE_BALL])) {
     console.log("click");
     if (!state.isBallReleased) {
       state.isBallReleased = true;
-      state.ballVelocity.y = -100;
+      state.ball.velocity.y = -100;
     }
   }
 
   if (state.isBallReleased) {
-    state.ballPosition.x += state.ballVelocity.x * input.deltaTime;
-    state.ballPosition.y += state.ballVelocity.y * input.deltaTime;
-  } else {
-    state.ballPosition.x = state.playerPosition.x;
-    state.ballPosition.y = state.playerPosition.y - 20;
-  }
+    state.ball.position.x += state.ball.velocity.x * input.deltaTime;
+    state.ball.position.y += state.ball.velocity.y * input.deltaTime;
 
+    if (
+      checkCircleRectangleCollision(
+        state.ball.position,
+        10,
+        state.player.position,
+        90,
+        30
+      )
+    ) {
+      state.ball.velocity.y *= -1;
+    }
+  } else {
+    state.ball.position.x = state.player.position.x;
+    state.ball.position.y = state.player.position.y - 25;
+  }
   //   if (isButtonReleased(input.buttons[Buttons.MOVE_LEFT])) {
   //     console.log("left up");
   //   }
 
   pushObject(
     commands,
-    0,
-    state.playerPosition,
-    { x: 0, y: 0, z: 1, w: 1 },
+    state.player.meshId,
+    state.player.position,
+    state.player.color,
     state.assets
   );
 
-  for (const position of state.blockPositions) {
-    pushObject(commands, 1, position, { x: 0, y: 1, z: 0, w: 1 }, state.assets);
+  for (const block of state.blocks) {
+    if (
+      checkCircleRectangleCollision(
+        state.ball.position,
+        10,
+        block.position,
+        90,
+        30
+      )
+    ) {
+      state.ball.velocity.y *= -1;
+    }
+
+    pushObject(
+      commands,
+      block.meshId,
+      block.position,
+      block.color,
+      state.assets
+    );
   }
 
   pushObject(
     commands,
-    2,
-    state.ballPosition,
-    { x: 1, y: 1, z: 1, w: 1 },
+    state.ball.meshId,
+    state.ball.position,
+    state.ball.color,
     state.assets
   );
 

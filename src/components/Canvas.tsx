@@ -1,5 +1,11 @@
 import { useRef, useEffect } from "react";
-import { Buttons, ButtonState, GameInput, GameState } from "../game/game_types";
+import {
+  Buttons,
+  ButtonState,
+  GameInput,
+  GameState,
+  MeshId,
+} from "../game/game_types";
 import { createCircle, createRectangle, gameUpdate } from "../game/game";
 import { initWebGPU, beginRender, endRender } from "../game/renderer";
 import { RendererCommands, RendererCommand } from "../game/renderer_types";
@@ -19,24 +25,44 @@ const Canvas = () => {
   });
   const gameState = useRef<GameState>({
     playerCount: 1,
-    playerPosition: { x: 400, y: 550 },
+    //playerPosition: { x: 400, y: 550 },
+    player: {
+      position: { x: 400, y: 500 },
+      color: { x: 0, y: 0, z: 1, w: 1 },
+      meshId: MeshId.PLAYER,
+    },
     blockCount: 10,
-    blockPositions: [
-      { x: 100, y: 100 },
-      { x: 200, y: 100 },
-      { x: 300, y: 100 },
-      { x: 400, y: 100 },
-      { x: 500, y: 100 },
-      { x: 600, y: 100 },
-      { x: 700, y: 100 },
-      { x: 100, y: 200 },
-      { x: 200, y: 200 },
-      { x: 300, y: 200 },
-      { x: 400, y: 200 },
-    ],
+    // blockPositions: [
+    //   { x: 100, y: 100 },
+    //   { x: 200, y: 100 },
+    //   { x: 300, y: 100 },
+    //   { x: 400, y: 100 },
+    //   { x: 500, y: 100 },
+    //   { x: 600, y: 100 },
+    //   { x: 700, y: 100 },
+    //   { x: 100, y: 200 },
+    //   { x: 200, y: 200 },
+    //   { x: 300, y: 200 },
+    //   { x: 400, y: 200 },
+    // ],
+    blocks: Array.from({ length: 10 }, (block, index) => ({
+      meshId: MeshId.BLOCK,
+      hp: 1,
+      color: { x: 0, y: 1, z: 0, w: 1 },
+      position: {
+        x: ((index * 100) % 700) + 100,
+        y: Math.floor(index / 7) * 100 + 100,
+      },
+    })),
     ballCount: 1,
-    ballPosition: { x: 0, y: 100 },
-    ballVelocity: { x: 0, y: 0 },
+    ball: {
+      meshId: MeshId.BALL,
+      color: { x: 1, y: 1, z: 1, w: 1 },
+      position: { x: 0, y: 0 },
+      velocity: { x: 0, y: 0 },
+    },
+    //ballPosition: { x: 0, y: 100 },
+    //ballVelocity: { x: 0, y: 0 },
     isBallReleased: false,
 
     assets: [
