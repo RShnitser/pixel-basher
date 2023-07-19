@@ -1,4 +1,19 @@
-import { v2, m3x3 } from "./math_types";
+import { v2, v3, v4, m3x3 } from "./math_types";
+
+export const V2 = (x: number, y: number) => {
+  const result: v2 = { x, y };
+  return result;
+};
+
+export const V3 = (x: number, y: number, z: number) => {
+  const result: v3 = { x, y, z };
+  return result;
+};
+
+export const V4 = (x: number, y: number, z: number, w: number) => {
+  const result: v4 = { x, y, z, w };
+  return result;
+};
 
 export const identityM3x3 = (): m3x3 => {
   return {
@@ -89,4 +104,47 @@ export const scaleM3x3 = (m: m3x3, s: v2): m3x3 => {
   //m.data[8] = b22 * 1,
   //
   return m;
+};
+
+export const addV2 = (a: v2, b: v2) => {
+  const result: v2 = { x: a.x + b.x, y: a.y + b.y };
+  return result;
+};
+
+export const subV2 = (a: v2, b: v2) => {
+  const result: v2 = { x: b.x - a.x, y: b.y - a.y };
+  return result;
+};
+
+export const mulV2 = (c: number, v: v2) => {
+  const result: v2 = { x: c * v.x, y: c * v.y };
+  return result;
+};
+
+export const lengthSquaredV2 = (v: v2) => {
+  return v.x * v.x + v.y * v.y;
+};
+
+export const dotProduct = (a: v2, b: v2) => {
+  return a.x * b.x + a.y * b.y;
+};
+
+export const reflectV2 = (v: v2, n: v2) => {
+  //return subV2(mulV2(1 / (2 * dotProduct(v, n)), n), v);
+  const mult = -2 * dotProduct(v, n);
+  const result = addV2(v, mulV2(mult, n));
+  return result;
+};
+
+export const lerp = (a: number, b: number, t: number) => {
+  const result = (1 - t) * a + t * b;
+  return result;
+};
+
+export const max = (a: number, b: number) => {
+  return a > b ? a : b;
+};
+
+export const min = (a: number, b: number) => {
+  return a < b ? a : b;
 };

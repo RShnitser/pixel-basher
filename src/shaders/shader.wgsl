@@ -1,20 +1,30 @@
- struct VertexOut {
-        @builtin(position) position : vec4f,
-        @location(0) color : vec4f
-        }
+struct Uniforms {
+    color: vec4f,
+    matrix: mat3x3f
+}
 
-        @vertex
-        fn vertex_main(@location(0) position: vec4f,
-                    @location(1) color: vec4f) -> VertexOut
-        {
-        var output : VertexOut;
-        output.position = position;
-        output.color = color;
-        return output;
-        }
+struct VertexOut {
+    @builtin(position) position: vec4f,
+    @location(0) color: vec4f
+}
 
-        @fragment
-        fn fragment_main(fragData: VertexOut) -> @location(0) vec4f
-        {
-        return fragData.color;
-        }
+@group(0) @binding(0) var<storage, read> uniforms : array<Uniforms>;
+
+@vertex
+fn vertex_main(
+    @builtin(instance_index) Id: u32,
+    @location(0) position: vec2f
+) -> VertexOut {
+    var output: VertexOut;
+
+    let clipSpace = (uniforms[Id].matrix * vec3f(position, 1)).xy;
+
+    output.position = vec4f(clipSpace, 0.0, 1.0);
+    output.color = uniforms[Id].color;
+    return output;
+}
+
+@fragment
+fn fragment_main(fragData: VertexOut) -> @location(0) vec4f {
+    return fragData.color;
+}

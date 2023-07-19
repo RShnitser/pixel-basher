@@ -12,6 +12,7 @@ export const MeshId = {
   PLAYER: 0,
   BLOCK: 1,
   BALL: 2,
+  PARTICLE: 3,
 } as const;
 
 export type MeshId = (typeof MeshId)[keyof typeof MeshId];
@@ -41,6 +42,9 @@ export type GameState = {
   //ballVelocity: v2;
 
   isBallReleased: boolean;
+  playerSpeed: number;
+
+  trailEmitter: ParticleEmitter;
 
   assets: GameAsset[];
 };
@@ -54,6 +58,7 @@ export type GameAsset = {
 export type Player = {
   color: v4;
   position: v2;
+  velocity: v2;
   meshId: MeshId;
 };
 
@@ -69,4 +74,29 @@ export type Ball = {
   position: v2;
   velocity: v2;
   meshId: MeshId;
+};
+
+export type ParticleEmitter = {
+  count: number;
+  maxCount: number;
+  color: v4;
+  position: v2;
+  rate: number;
+  timeElapsed: number;
+  meshId: MeshId;
+  particles: Particle[];
+};
+
+export type Particle = {
+  color: v4;
+  position: v2;
+  lifeTime: number;
+  //meshId: MeshId;
+};
+
+export type Hit = {
+  isHit: boolean;
+  hitTime: number;
+  hitPosition: v2;
+  hitNormal: v2;
 };

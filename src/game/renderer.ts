@@ -86,91 +86,71 @@ export const initWebGPU = async (
     alphaMode: "premultiplied",
   });
 
-  // const vertices = new Float32Array([
-  //   -1, 1, 0,
-  //   1, 0, 1,
-  //   0, 1, -1,
-  //   -1, 0, 1,
-  //   0, -1, 0, 1,
-  // ]);
-
-  //const vertices = new Float32Array([0, 0, 30, 0, 0, 30, 30, 30]);
-
-  //const indexData = new Uint32Array([0, 1, 2, 1, 3, 2]);
   const objectBuffers: ObjectBuffers[] = [];
 
-  const playerBuffers: ObjectBuffers = {
-    // vertexBuffer: device.createBuffer({
-    //   size: gameState.current.assets[0].vertexData.byteLength, // make it big enough to store vertices in
-    //   usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    // }),
-    // indexBuffer: device.createBuffer({
-    //   size: gameState.current.assets[0].indexData.byteLength,
-    //   usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-    // }),
-    vertexBuffer: createBuffer(
-      device,
-      assets[0].vertexData,
-      GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-    ),
-    indexBuffer: createBuffer(
-      device,
-      assets[0].indexData,
-      GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
-    ),
-  };
+  // const playerBuffers: ObjectBuffers = {
 
-  objectBuffers.push(playerBuffers);
+  //   vertexBuffer: createBuffer(
+  //     device,
+  //     assets[0].vertexData,
+  //     GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+  //   ),
+  //   indexBuffer: createBuffer(
+  //     device,
+  //     assets[0].indexData,
+  //     GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+  //   ),
+  // };
 
-  const blockBuffers: ObjectBuffers = {
-    // vertexBuffer: device.createBuffer({
-    //   size: gameState.current.assets[1].vertexData.byteLength, // make it big enough to store vertices in
-    //   usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    // }),
-    // indexBuffer: device.createBuffer({
-    //   size: gameState.current.assets[1].indexData.byteLength,
-    //   usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-    // }),
-    vertexBuffer: createBuffer(
-      device,
-      assets[1].vertexData,
-      GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-    ),
-    indexBuffer: createBuffer(
-      device,
-      assets[1].indexData,
-      GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
-    ),
-  };
+  // objectBuffers.push(playerBuffers);
 
-  objectBuffers.push(blockBuffers);
+  // const blockBuffers: ObjectBuffers = {
 
-  const ballBuffers: ObjectBuffers = {
-    vertexBuffer: createBuffer(
-      device,
-      assets[2].vertexData,
-      GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-    ),
-    indexBuffer: createBuffer(
-      device,
-      assets[2].indexData,
-      GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
-    ),
-  };
+  //   vertexBuffer: createBuffer(
+  //     device,
+  //     assets[1].vertexData,
+  //     GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+  //   ),
+  //   indexBuffer: createBuffer(
+  //     device,
+  //     assets[1].indexData,
+  //     GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+  //   ),
+  // };
 
-  objectBuffers.push(ballBuffers);
+  // objectBuffers.push(blockBuffers);
 
-  //const playerData = gameState.current.assets[0];
-  // device.queue.writeBuffer(
-  //   playerBuffers.vertexBuffer,
-  //   0,
-  //   playerData.vertexData
-  // );
-  // device.queue.writeBuffer(
-  //   playerBuffers.indexBuffer,
-  //   0,
-  //   playerData.indexData
-  // );
+  // const ballBuffers: ObjectBuffers = {
+  //   vertexBuffer: createBuffer(
+  //     device,
+  //     assets[2].vertexData,
+  //     GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+  //   ),
+  //   indexBuffer: createBuffer(
+  //     device,
+  //     assets[2].indexData,
+  //     GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+  //   ),
+  // };
+
+  // objectBuffers.push(ballBuffers);
+
+  for (const asset of assets) {
+    const buffer: ObjectBuffers = {
+      vertexBuffer: createBuffer(
+        device,
+        asset.vertexData,
+        GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+      ),
+      indexBuffer: createBuffer(
+        device,
+        asset.indexData,
+        GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+      ),
+    };
+
+    objectBuffers.push(buffer);
+  }
 
   const vertexBuffers: Iterable<GPUVertexBufferLayout> = [
     {
@@ -198,13 +178,28 @@ export const initWebGPU = async (
       targets: [
         {
           format: navigator.gpu.getPreferredCanvasFormat(),
+          blend: {
+            alpha: {
+              srcFactor: "zero",
+              dstFactor: "one",
+              operation: "add",
+            },
+            color: {
+              srcFactor: "src-alpha",
+              dstFactor: "one-minus-src-alpha",
+              operation: "add",
+            },
+          },
+
           //format: "bgra8unorm",
         },
       ],
     },
+
     primitive: {
       topology: "triangle-list",
     },
+
     layout: "auto",
   };
 
@@ -250,7 +245,7 @@ export const initWebGPU = async (
   };
 
   const projection = {
-    data: new Float32Array([2 / 800, 0, 0, 0, 0, -2 / 600, 0, 0, -1, 1, 1, 0]),
+    data: new Float32Array([2 / 800, 0, 0, 0, 0, 2 / 600, 0, 0, -1, -1, 1, 0]),
   };
 
   //const commandEncoder = device.createCommandEncoder();

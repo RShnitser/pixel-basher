@@ -10,6 +10,8 @@ import { createCircle, createRectangle, gameUpdate } from "../game/game";
 import { initWebGPU, beginRender, endRender } from "../game/renderer";
 import { RendererCommands, RendererCommand } from "../game/renderer_types";
 import { WebGPU } from "../game/renderer_types";
+import { V2, V4 } from "../game/math";
+import "./canvas.css";
 
 const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -27,7 +29,8 @@ const Canvas = () => {
     playerCount: 1,
     //playerPosition: { x: 400, y: 550 },
     player: {
-      position: { x: 400, y: 500 },
+      position: { x: 400, y: 20 },
+      velocity: { x: 0, y: 0 },
       color: { x: 0, y: 0, z: 1, w: 1 },
       meshId: MeshId.PLAYER,
     },
@@ -51,7 +54,7 @@ const Canvas = () => {
       color: { x: 0, y: 1, z: 0, w: 1 },
       position: {
         x: ((index * 100) % 700) + 100,
-        y: Math.floor(index / 7) * 100 + 100,
+        y: 600 - (Math.floor(index / 7) * 100 + 100),
       },
     })),
     ballCount: 1,
@@ -64,6 +67,22 @@ const Canvas = () => {
     //ballPosition: { x: 0, y: 100 },
     //ballVelocity: { x: 0, y: 0 },
     isBallReleased: false,
+    playerSpeed: 200,
+
+    trailEmitter: {
+      count: 0,
+      maxCount: 64,
+      position: V2(0, 0),
+      color: V4(1, 1, 1, 1),
+      rate: 0,
+      timeElapsed: 0,
+      meshId: MeshId.PARTICLE,
+      particles: Array.from({ length: 64 }, () => ({
+        position: V2(0, 0),
+        color: V4(0, 0, 0, 0),
+        lifeTime: 0,
+      })),
+    },
 
     assets: [
       // {
@@ -77,6 +96,8 @@ const Canvas = () => {
       // },
       createRectangle(90, 30),
       createCircle(10, 8),
+      createRectangle(10, 10),
+      //createCircle(30, 30),
     ],
   });
   const commands = useRef<RendererCommands>({
@@ -186,10 +207,7 @@ const Canvas = () => {
 
   return (
     <>
-      <canvas
-        ref={canvasRef}
-        style={{ width: "800px", height: "600px" }}
-      ></canvas>
+      <canvas ref={canvasRef}></canvas>
     </>
   );
 };
