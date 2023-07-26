@@ -148,3 +148,8 @@ export const max = (a: number, b: number) => {
 export const min = (a: number, b: number) => {
   return a < b ? a : b;
 };
+
+export const randomRange = (min: number, max: number) => {
+  const result = Math.random() * (max - min) + min;
+  return result;
+};

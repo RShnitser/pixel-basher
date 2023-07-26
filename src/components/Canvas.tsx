@@ -6,16 +6,23 @@ import {
   GameState,
   MeshId,
 } from "../game/game_types";
-import { createCircle, createRectangle, gameUpdate } from "../game/game";
+import {
+  createCircle,
+  createRectangle,
+  gameInit,
+  gameUpdate,
+} from "../game/game";
 import { initWebGPU, beginRender, endRender } from "../game/renderer";
-import { RendererCommands, RendererCommand } from "../game/renderer_types";
+import { RendererCommands } from "../game/renderer_types";
 import { WebGPU } from "../game/renderer_types";
 import { V2, V4 } from "../game/math";
 import "./canvas.css";
+import { fillSoundBuffer, initAudio, Audio, loadSound } from "../game/audio";
 
 const Canvas = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const webGPU = useRef<WebGPU | null>(null);
+  const audio = useRef<Audio>(initAudio());
   const updateId = useRef<number | null>(null);
   const prevTime = useRef<number>(0);
   const gameInput = useRef<GameInput>({
@@ -26,6 +33,7 @@ const Canvas = () => {
     })),
   });
   const gameState = useRef<GameState>({
+    isInitialized: false,
     playerCount: 1,
     //playerPosition: { x: 400, y: 550 },
     player: {
@@ -79,12 +87,14 @@ const Canvas = () => {
       meshId: MeshId.PARTICLE,
       particles: Array.from({ length: 64 }, () => ({
         position: V2(0, 0),
+        velocity: V2(0, 0),
         color: V4(0, 0, 0, 0),
+        currentLifeTime: 0,
         lifeTime: 0,
       })),
     },
 
-    assets: [
+    meshes: [
       // {
       //   vertexData: new Float32Array([0, 0, 30, 0, 0, 30, 30, 30]),
       //   indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
@@ -99,6 +109,17 @@ const Canvas = () => {
       createRectangle(10, 10),
       //createCircle(30, 30),
     ],
+    sounds: [],
+
+    currentSound: 0,
+    maxSounds: 16,
+    soundQueue: Array.from({ length: 16 }, () => ({
+      soundId: 0,
+      samplesRead: 0,
+      sampleCount: 0,
+      isLooping: false,
+      isActive: false,
+    })),
   });
   const commands = useRef<RendererCommands>({
     count: 0,
@@ -167,7 +188,33 @@ const Canvas = () => {
       gameInput.current.deltaTime = (now - prevTime.current) * 0.001;
 
       beginRender(webGPU.current);
-      gameUpdate(gameState.current, gameInput.current, commands.current);
+      //audio.current.startTime = audio.current.context.currentTime;
+      const targetSamples = audio.current.context.sampleRate / 15;
+      //console.log(audio.current.context.currentTime, audio.current.endTime);
+      //console.log(audio.current.endTime - audio.current.startTime);
+      let samplesInQueue = Math.ceil(
+        (audio.current.endTime - audio.current.context.currentTime) *
+          audio.current.context.sampleRate
+      );
+      if (samplesInQueue < 0) {
+        samplesInQueue = 0;
+        audio.current.endTime = audio.current.context.currentTime;
+      }
+      const samplesToWrite = targetSamples - samplesInQueue;
+      // if (samplesToWrite <= 0) {
+      //   samplesToWrite = 0;
+      // }
+      //console.log(audio.current.startTime, audio.current.endTime);
+      //console.log(samplesToWrite);
+      audio.current.samples.sampleCount = samplesToWrite;
+      gameUpdate(
+        gameState.current,
+        gameInput.current,
+        commands.current,
+        audio.current.samples
+        //audio.current.context
+      );
+      fillSoundBuffer(audio.current);
       endRender(webGPU.current, commands.current);
       //render(webGPU.current);
 
@@ -183,17 +230,34 @@ const Canvas = () => {
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    if (!webGPU.current) {
-      Promise.resolve(
-        initWebGPU(canvasRef.current, gameState.current.assets)
-      ).then((value) => {
-        webGPU.current = value;
-      });
+
+    const loadData = async () => {
+      //if (!webGPU.current) {
+
+      const sound1 = await loadSound(audio.current.context, "sound1.wav");
+      const sound2 = await loadSound(audio.current.context, "music1.mp3");
+      gameState.current.sounds.push(sound1);
+      gameState.current.sounds.push(sound2);
+      webGPU.current = await initWebGPU(
+        canvasRef.current,
+        gameState.current.meshes
+      );
+      //if (!gameState.current.isInitialized) {
+      gameInit(gameState.current);
+      //gameState.current.isInitialized = true;
+      //}
+      //}
+      if (!updateId.current) {
+        prevTime.current = performance.now();
+        updateId.current = requestAnimationFrame(update);
+      }
+    };
+
+    if (!gameState.current.isInitialized) {
+      loadData();
+      gameState.current.isInitialized = true;
     }
-    if (!updateId.current) {
-      prevTime.current = performance.now();
-      updateId.current = requestAnimationFrame(update);
-    }
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);

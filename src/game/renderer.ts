@@ -1,5 +1,5 @@
 import { RenderGroup, WebGPU } from "./renderer_types";
-import { GameAsset } from "./game_types";
+import { Mesh } from "./game_types";
 import { v2, v4 } from "./math_types";
 import { multiplyM3x3, translateM3x3, identityM3x3 } from "./math";
 import { RendererCommands, ObjectBuffers, Buffer } from "./renderer_types";
@@ -19,7 +19,7 @@ const createBuffer = (device: GPUDevice, data: Buffer, usage: number) => {
 
 export const initWebGPU = async (
   canvas: HTMLCanvasElement | null,
-  assets: GameAsset[]
+  assets: Mesh[]
 ) => {
   if (!navigator.gpu) {
     return null;
@@ -414,7 +414,7 @@ export const pushObject = (
   objectId: number,
   position: v2,
   color: v4,
-  assets: GameAsset[]
+  assets: Mesh[]
 ) => {
   //console.log(commands.count);
   const command = commands.commands[commands.count];

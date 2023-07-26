@@ -17,6 +17,13 @@ export const MeshId = {
 
 export type MeshId = (typeof MeshId)[keyof typeof MeshId];
 
+export const SoundId = {
+  HIT: 0,
+  MUSIC: 1,
+} as const;
+
+export type SoundId = (typeof SoundId)[keyof typeof SoundId];
+
 export type ButtonState = {
   isDown: boolean;
   changed: boolean;
@@ -28,6 +35,8 @@ export type GameInput = {
 };
 
 export type GameState = {
+  isInitialized: boolean;
+
   playerCount: number;
   player: Player;
   //playerPosition: v2;
@@ -45,11 +54,17 @@ export type GameState = {
   playerSpeed: number;
 
   trailEmitter: ParticleEmitter;
+  //testSampleIndex: number;
 
-  assets: GameAsset[];
+  meshes: Mesh[];
+  sounds: Sound[];
+
+  currentSound: number;
+  maxSounds: number;
+  soundQueue: QueuedSound[];
 };
 
-export type GameAsset = {
+export type Mesh = {
   //color: Float32Array;
   vertexData: Float32Array;
   indexData: Uint32Array;
@@ -90,6 +105,8 @@ export type ParticleEmitter = {
 export type Particle = {
   color: v4;
   position: v2;
+  velocity: v2;
+  currentLifeTime: number;
   lifeTime: number;
   //meshId: MeshId;
 };
@@ -99,4 +116,23 @@ export type Hit = {
   hitTime: number;
   hitPosition: v2;
   hitNormal: v2;
+};
+
+export type SoundBuffer = {
+  sampleCount: number;
+  samples: Float32Array;
+};
+
+export type Sound = {
+  sampleCount: number;
+  channelCount: number;
+  samples: Float32Array[];
+};
+
+export type QueuedSound = {
+  soundId: SoundId;
+  samplesRead: number;
+  sampleCount: number;
+  isLooping: boolean;
+  isActive: boolean;
 };
