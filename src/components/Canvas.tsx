@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   Buttons,
   ButtonState,
@@ -16,10 +16,16 @@ import { initWebGPU, beginRender, endRender } from "../game/renderer";
 import { RendererCommands } from "../game/renderer_types";
 import { WebGPU } from "../game/renderer_types";
 import { V2, V4 } from "../game/math";
-import "./canvas.css";
 import { fillSoundBuffer, initAudio, Audio, loadSound } from "../game/audio";
+import "./canvas.css";
 
 const Canvas = () => {
+  //const [score, setScore] = useState(0);
+  //const [time, setTime] = useState(0);
+
+  const textRef = useRef<HTMLCanvasElement | null>(null);
+  const textContext = useRef<CanvasRenderingContext2D | null>(null);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const webGPU = useRef<WebGPU | null>(null);
   const audio = useRef<Audio>(initAudio());
@@ -34,6 +40,8 @@ const Canvas = () => {
   });
   const gameState = useRef<GameState>({
     isInitialized: false,
+    score: 0,
+    remainingTime: 120,
     playerCount: 1,
     //playerPosition: { x: 400, y: 550 },
     player: {
@@ -42,7 +50,7 @@ const Canvas = () => {
       color: { x: 0, y: 0, z: 1, w: 1 },
       meshId: MeshId.PLAYER,
     },
-    blockCount: 10,
+    blockCount: 0,
     // blockPositions: [
     //   { x: 100, y: 100 },
     //   { x: 200, y: 100 },
@@ -56,26 +64,30 @@ const Canvas = () => {
     //   { x: 300, y: 200 },
     //   { x: 400, y: 200 },
     // ],
-    blocks: Array.from({ length: 10 }, (block, index) => ({
+    blocks: Array.from({ length: 8 * 6 }, (block, index) => ({
       meshId: MeshId.BLOCK,
-      hp: 1,
-      color: { x: 0, y: 1, z: 0, w: 1 },
+      hp: 0,
+      color: { x: 0, y: 0, z: (index + 1) / (8 * 6), w: 1 },
       position: {
-        x: ((index * 100) % 700) + 100,
-        y: 600 - (Math.floor(index / 7) * 100 + 100),
+        x: ((index * 100) % 800) + 50,
+        y: 600 - Math.floor(index / 8) * 40 - 20,
       },
+      //velocity: V2(0, -10),
     })),
-    ballCount: 1,
-    ball: {
+    //blocks: [],
+    ballCount: 3,
+    balls: Array.from({ length: 3 }, () => ({
+      isReleased: false,
+      combo: 0,
       meshId: MeshId.BALL,
       color: { x: 1, y: 1, z: 1, w: 1 },
       position: { x: 0, y: 0 },
       velocity: { x: 0, y: 0 },
-    },
+    })),
     //ballPosition: { x: 0, y: 100 },
     //ballVelocity: { x: 0, y: 0 },
-    isBallReleased: false,
-    playerSpeed: 200,
+    //isBallReleased: false,
+    playerSpeed: 600,
 
     trailEmitter: {
       count: 0,
@@ -99,17 +111,26 @@ const Canvas = () => {
       //   vertexData: new Float32Array([0, 0, 30, 0, 0, 30, 30, 30]),
       //   indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
       // },
-      createRectangle(90, 30),
+      createRectangle(100, 20),
       // {
       //   vertexData: new Float32Array([0, 0, 90, 0, 0, 30, 90, 30]),
       //   indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
       // },
-      createRectangle(90, 30),
+      createRectangle(100, 40),
       createCircle(10, 8),
       createRectangle(10, 10),
       //createCircle(30, 30),
     ],
     sounds: [],
+    layouts: [
+      {
+        data: new Uint8Array([
+          1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,
+          1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+          1, 1,
+        ]),
+      },
+    ],
 
     currentSound: 0,
     maxSounds: 16,
@@ -120,6 +141,9 @@ const Canvas = () => {
       isLooping: false,
       isActive: false,
     })),
+
+    //soundHead: null,
+    //soundFreeHead: null,
   });
   const commands = useRef<RendererCommands>({
     count: 0,
@@ -131,7 +155,7 @@ const Canvas = () => {
     //   position: { x: 0, y: 0 },
     //   color: { x: 0, y: 0, z: 0, w: 0 },
     // }),
-    commands: Array.from({ length: 256 }, () => ({
+    commands: Array.from({ length: 512 }, () => ({
       objectId: 0,
       //count: 0,
       vertexBuffer: new Float32Array([]),
@@ -223,6 +247,20 @@ const Canvas = () => {
       }
     }
 
+    //setTime(gameState.current.remainingTime);
+    //setScore(gameState.current.score);
+    if (textContext.current !== null) {
+      //textContext.current.font = "18px sans-serif";
+      textContext.current.clearRect(0, 0, 800, 40);
+      textContext.current.fillText(gameState.current.score.toString(), 5, 1);
+      textContext.current.fillText(
+        gameState.current.remainingTime.toFixed(2),
+        700,
+        1
+      );
+      //textContext.current.fillText("text", 20, 40);
+    }
+
     prevTime.current = now;
     requestAnimationFrame(update);
   };
@@ -244,6 +282,15 @@ const Canvas = () => {
       );
       //if (!gameState.current.isInitialized) {
       gameInit(gameState.current);
+
+      if (textRef.current !== null) {
+        textContext.current = textRef.current.getContext("2d");
+        if (textContext.current) {
+          textContext.current.fillStyle = "black";
+          textContext.current.textBaseline = "hanging";
+          textContext.current.font = "18px sans-serif";
+        }
+      }
       //gameState.current.isInitialized = true;
       //}
       //}
@@ -271,7 +318,22 @@ const Canvas = () => {
 
   return (
     <>
-      <canvas ref={canvasRef}></canvas>
+      {/* <div className="score-container">
+        <div>{score}</div>
+        <div>{time.toFixed(2)}</div>
+      </div> */}
+      <canvas
+        className="text-canvas"
+        width={800}
+        height={20}
+        ref={textRef}
+      ></canvas>
+      <canvas
+        className="game-canvas"
+        width={800}
+        height={600}
+        ref={canvasRef}
+      ></canvas>
     </>
   );
 };

@@ -12,7 +12,7 @@ import {
 import { pushObject } from "./renderer";
 import { RendererCommands } from "./renderer_types";
 import { v2, v4 } from "./math_types";
-import { mulV2, randomRange, reflectV2, V2, V4 } from "./math";
+import { addV2, mulV2, randomRange, reflectV2, V2, V4 } from "./math";
 import { Hit } from "./game_types";
 //import { playSound } from "./audio";
 
@@ -46,18 +46,47 @@ import { Hit } from "./game_types";
 //   //console.log(riffId === FileHeader.RIFF);
 // };
 
-const playSound = (state: GameState, id: SoundId, isLooping = false) => {
-  const queuedSound = state.soundQueue[state.currentSound];
-  const sound = state.sounds[id];
-  queuedSound.soundId = id;
-  queuedSound.isActive = true;
-  queuedSound.isLooping = isLooping;
-  queuedSound.samplesRead = 0;
-  queuedSound.sampleCount = sound.sampleCount;
+const comboScore = [
+  1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7,
+  7, 7, 8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10, 10,
+  10, 10, 10, 10, 10, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 12, 12, 12,
+  12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+  13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 15,
+  15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+];
+//const scoreLog = 1 / Math.log(1.5);
+const getComboScore = (combo: number) => {
+  //console.log(comboScore.length);
+  if (combo > 120) {
+    return 16;
+  }
+  //const result = Math.floor(scoreLog * Math.log(combo));
+  const result = comboScore[combo];
+  return result;
+};
 
-  state.currentSound++;
-  if (state.currentSound >= state.maxSounds) {
-    state.currentSound = 0;
+// function getBaseLog(x: number, y: number) {
+//   return Math.log(y) / Math.log(x);
+// }
+
+const playSound = (state: GameState, id: SoundId, isLooping = false) => {
+  //const queuedSound = state.soundQueue[state.currentSound];
+  if (state.currentSound === state.maxSounds) {
+    return;
+  }
+
+  const sound = state.sounds[id];
+  for (let i = 0; i < state.maxSounds; i++) {
+    const queuedSound = state.soundQueue[i];
+    if (!queuedSound.isActive) {
+      queuedSound.soundId = id;
+      queuedSound.isLooping = isLooping;
+      queuedSound.samplesRead = 0;
+      queuedSound.sampleCount = sound.sampleCount;
+      queuedSound.isActive = true;
+      state.currentSound++;
+      break;
+    }
   }
 };
 
@@ -67,8 +96,13 @@ const outputSound = (state: GameState, soundBuffer: SoundBuffer) => {
 
   for (let i = 0; i < soundBuffer.sampleCount; i++) {
     const sampleSums = Array.from({ length: channelCount }, () => 0);
+
     for (let s = 0; s < state.maxSounds; s++) {
       const queuedSound = state.soundQueue[s];
+      //let queuedSound = state.soundHead;
+      //while (queuedSound !== null) {
+      //console.log(queuedSound);
+      //const nextQueuedSound = queuedSound.next;
       if (queuedSound.isActive) {
         const sound = state.sounds[queuedSound.soundId];
 
@@ -78,18 +112,28 @@ const outputSound = (state: GameState, soundBuffer: SoundBuffer) => {
         }
 
         queuedSound.samplesRead++;
-        if (queuedSound.samplesRead > queuedSound.sampleCount - 1) {
+        if (queuedSound.samplesRead === queuedSound.sampleCount) {
           if (queuedSound.isLooping === true) {
             queuedSound.samplesRead = 0;
           } else {
             queuedSound.isActive = false;
+            // if (s < state.currentSound - 1) {
+            //   const temp = state.sounds[s];
+            //   state.sounds[s] = state.sounds[state.currentSound - 1];
+            //   state.sounds[state.currentSound - 1] = temp;
+            //   s--;
+            // }
+            state.currentSound--;
+            //queuedSound.next = state.soundFreeHead;
+            //state.soundFreeHead = queuedSound;
           }
         }
       }
+      //queuedSound = nextQueuedSound;
     }
 
     for (let c = 0; c < channelCount; c++) {
-      soundBuffer.samples[bufferIndex + c] = sampleSums[c];
+      soundBuffer.samples[bufferIndex + c] = sampleSums[c] * 0.5;
     }
     // state.testSampleIndex++;
     // if (state.testSampleIndex > sound.sampleCount) {
@@ -340,8 +384,55 @@ const isButtonReleased = (button: ButtonState) => {
   return result;
 };
 
+const resetBalls = (state: GameState) => {
+  for (const ball of state.balls) {
+    ball.isReleased = false;
+    ball.position.x = state.player.position.x;
+    ball.position.y = state.player.position.y;
+  }
+};
+
+const setLayout = (state: GameState, layoutIndex: number) => {
+  const layout = state.layouts[layoutIndex].data;
+  state.blockCount = 0;
+  for (let x = 0; x < 8; x++) {
+    for (let y = 0; y < 6; y++) {
+      const index = y * 8 + x;
+
+      const value = layout[index];
+      if (value) {
+        const block = state.blocks[index];
+        block.hp = value;
+        block.position.x = ((index * 100) % 800) + 50;
+        (block.position.y = 600 - Math.floor(index / 8) * 40 - 20),
+          state.blockCount++;
+      }
+
+      // if (value) {
+      //   const block: Block = {
+      //     meshId: MeshId.BLOCK,
+      //     hp: 1,
+      //     color: { x: 0, y: 0, z: (index + 1) / (8 * 6), w: 1 },
+      //     position: {
+      //       x: ((index * 100) % 800) + 50,
+      //       y: 600 - Math.floor(index / 8) * 40 - 20,
+      //     },
+      //     velocity: V2(0, -10),
+      //   };
+      //   state.blocks.push(block);
+      //   state.blockCount += 1;
+      // }
+    }
+  }
+};
+
 export const gameInit = (state: GameState) => {
+  setLayout(state, 0);
   playSound(state, SoundId.MUSIC, true);
+
+  for (let i = 0; i < 100; i++) {
+    console.log(getComboScore(i));
+  }
 };
 
 export const gameUpdate = (
@@ -360,19 +451,33 @@ export const gameUpdate = (
 
   if (isButtonDown(input.buttons[Buttons.MOVE_LEFT])) {
     //console.log("left down");
-    state.player.position.x -= state.playerSpeed * input.deltaTime;
+    //state.player.position.x -= state.playerSpeed * input.deltaTime;
+    state.player.velocity.x = -1 * state.playerSpeed;
   }
 
   if (isButtonDown(input.buttons[Buttons.MOVE_RIGHT])) {
     //console.log("left down");
-    state.player.position.x += state.playerSpeed * input.deltaTime;
+    //state.player.position.x += state.playerSpeed * input.deltaTime;
+    state.player.velocity.x = state.playerSpeed;
   }
 
   if (isButtonPressed(input.buttons[Buttons.RELEASE_BALL])) {
-    if (!state.isBallReleased) {
-      state.isBallReleased = true;
-      state.ball.velocity.x = 50;
-      state.ball.velocity.y = 500;
+    for (const ball of state.balls) {
+      if (!ball.isReleased) {
+        ball.isReleased = true;
+        ball.velocity.x = state.player.velocity.x / 3;
+        ball.velocity.y = 500;
+        break;
+        // state.isBallReleased = true;
+        // state.balls[0].velocity.x = 50;
+        // state.balls[0].velocity.y = 500;
+
+        // state.balls[1].velocity.x = -50;
+        // state.balls[1].velocity.y = 500;
+
+        // state.balls[2].velocity.x = 20;
+        // state.balls[2].velocity.y = 500;
+      }
     }
   }
 
@@ -388,30 +493,49 @@ export const gameUpdate = (
     state.meshes
   );
 
-  for (const block of state.blocks) {
+  //for (const block of state.blocks) {
+  for (let b = 0; b < state.blocks.length; b++) {
+    const block = state.blocks[b];
     if (block.hp > 0) {
-      const hit = checkCircleRectangleCollision(
-        state.ball.position,
-        //addV2(state.ball.position, mulV2(input.deltaTime, state.ball.velocity)),
-        mulV2(input.deltaTime, state.ball.velocity),
-        10,
-        block.position,
-        90,
-        30
-      );
+      for (const ball of state.balls) {
+        const hit = checkCircleRectangleCollision(
+          ball.position,
+          //addV2(ball.position, mulV2(input.deltaTime, ball.velocity)),
+          //mulV2(input.deltaTime, subV2(block.velocity, ball.velocity)),
+          mulV2(input.deltaTime, ball.velocity),
+          10,
+          block.position,
+          90,
+          30
+        );
 
-      if (hit.isHit) {
-        playSound(state, SoundId.HIT);
-        block.hp -= 1;
-        state.ball.position.x = hit.hitPosition.x;
-        state.ball.position.y = hit.hitPosition.y;
-        state.ball.velocity = reflectV2(state.ball.velocity, hit.hitNormal);
-        //state.ball.velocity.y = 0;
+        if (hit.isHit) {
+          playSound(state, SoundId.HIT);
+          block.hp -= 1;
+          ball.position.x = hit.hitPosition.x;
+          ball.position.y = hit.hitPosition.y;
+          ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
+          //state.ball.velocity.y = 0;
 
-        if (block.hp <= 0) {
-          emitBurst(state.trailEmitter, 15, 3, V4(0, 1, 0, 1));
+          if (block.hp <= 0) {
+            emitBurst(state.trailEmitter, 15, 3, V4(0, 1, 0, 1));
+            state.blockCount--;
+            state.score += getComboScore(ball.combo);
+            ball.combo++;
+
+            if (state.blockCount === 0) {
+              resetBalls(state);
+              setLayout(state, 0);
+            }
+          }
         }
       }
+
+      // if (b === 0) {
+      //   console.log(block.position);
+      // }
+      //block.position.x += block.velocity.x * input.deltaTime;
+      //block.position.y += block.velocity.y * input.deltaTime;
 
       pushObject(
         commands,
@@ -423,57 +547,66 @@ export const gameUpdate = (
     }
   }
 
-  if (state.isBallReleased) {
-    //const newBallPos = addV2(state.ball.position, state.ball.velocity);
+  //const newBallPos = addV2(state.ball.position, state.ball.velocity);
 
-    const hit = checkCircleRectangleCollision(
-      state.ball.position,
-      mulV2(input.deltaTime, state.ball.velocity),
-      10,
-      state.player.position,
-      90,
-      30
-    );
-    if (hit.isHit) {
-      state.ball.position.x = hit.hitPosition.x;
-      state.ball.position.y = hit.hitPosition.y;
-      state.ball.velocity = reflectV2(state.ball.velocity, hit.hitNormal);
+  for (const ball of state.balls) {
+    if (ball.isReleased) {
+      const hit = checkCircleRectangleCollision(
+        ball.position,
+        mulV2(input.deltaTime, ball.velocity),
+        10,
+        state.player.position,
+        90,
+        30
+      );
+      if (hit.isHit) {
+        ball.position.x = hit.hitPosition.x;
+        ball.position.y = hit.hitPosition.y;
+        ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
+      }
+
+      ball.position.x += ball.velocity.x * input.deltaTime;
+      ball.position.y += ball.velocity.y * input.deltaTime;
+
+      state.trailEmitter.position.x = ball.position.x;
+      state.trailEmitter.position.y = ball.position.y;
+      emitParticle(state.trailEmitter, 0.5, V2(0, 0), V4(0.8, 0.8, 1, 1));
+
+      if (ball.position.x < 10) {
+        ball.position.x = 10;
+        ball.velocity = reflectV2(ball.velocity, { x: 1, y: 0 });
+      }
+
+      if (ball.position.x > 790) {
+        ball.position.x = 790;
+        ball.velocity = reflectV2(ball.velocity, { x: -1, y: 0 });
+      }
+
+      if (ball.position.y > 590) {
+        ball.position.y = 590;
+        ball.velocity = reflectV2(ball.velocity, { x: 0, y: -1 });
+      }
+      if (ball.position.y < 0) {
+        ball.velocity.x = 0;
+        ball.velocity.y = 0;
+        ball.isReleased = false;
+        ball.combo = 0;
+        //ball.velocity = reflectV2(ball.velocity, { x: 0, y: -1 });
+      }
+    } else {
+      ball.position.x = state.player.position.x;
+      ball.position.y = state.player.position.y + 25;
     }
 
-    state.ball.position.x += state.ball.velocity.x * input.deltaTime;
-    state.ball.position.y += state.ball.velocity.y * input.deltaTime;
-
-    state.trailEmitter.position.x = state.ball.position.x;
-    state.trailEmitter.position.y = state.ball.position.y;
-    emitParticle(state.trailEmitter, 0.5, V2(0, 0), V4(0.8, 0.8, 1, 1));
-
-    if (state.ball.position.x < 10) {
-      state.ball.position.x = 10;
-      state.ball.velocity = reflectV2(state.ball.velocity, { x: 1, y: 0 });
-    }
-
-    if (state.ball.position.x > 790) {
-      state.ball.position.x = 790;
-      state.ball.velocity = reflectV2(state.ball.velocity, { x: -1, y: 0 });
-    }
-
-    if (state.ball.position.y > 590) {
-      state.ball.position.y = 590;
-      state.ball.velocity = reflectV2(state.ball.velocity, { x: 0, y: -1 });
-    }
-  } else {
-    state.ball.position.x = state.player.position.x;
-    state.ball.position.y = state.player.position.y + 25;
+    pushObject(commands, ball.meshId, ball.position, ball.color, state.meshes);
   }
 
   renderParticles(state.trailEmitter, commands, state, input.deltaTime);
-  pushObject(
-    commands,
-    state.ball.meshId,
-    state.ball.position,
-    state.ball.color,
-    state.meshes
-  );
+
+  state.player.position.x += state.player.velocity.x * input.deltaTime;
+  state.player.velocity.x = 0;
+
+  state.remainingTime -= input.deltaTime;
 
   //pushRenderGroup(commands, 1, state.blockPositions.length, state.assets);
 };

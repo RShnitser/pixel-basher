@@ -37,6 +37,9 @@ export type GameInput = {
 export type GameState = {
   isInitialized: boolean;
 
+  remainingTime: number;
+  score: number;
+
   playerCount: number;
   player: Player;
   //playerPosition: v2;
@@ -46,11 +49,11 @@ export type GameState = {
   //blockPositions: v2[];
 
   ballCount: number;
-  ball: Ball;
+  balls: Ball[];
   //ballPosition: v2;
   //ballVelocity: v2;
 
-  isBallReleased: boolean;
+  //isBallReleased: boolean;
   playerSpeed: number;
 
   trailEmitter: ParticleEmitter;
@@ -58,10 +61,14 @@ export type GameState = {
 
   meshes: Mesh[];
   sounds: Sound[];
+  layouts: BlockLayout[];
 
   currentSound: number;
   maxSounds: number;
   soundQueue: QueuedSound[];
+
+  //soundHead: QueuedSound | null;
+  //soundFreeHead: QueuedSound | null;
 };
 
 export type Mesh = {
@@ -80,11 +87,14 @@ export type Player = {
 export type Block = {
   color: v4;
   position: v2;
+  //velocity: v2;
   hp: number;
   meshId: MeshId;
 };
 
 export type Ball = {
+  isReleased: boolean;
+  combo: number;
   color: v4;
   position: v2;
   velocity: v2;
@@ -135,4 +145,9 @@ export type QueuedSound = {
   sampleCount: number;
   isLooping: boolean;
   isActive: boolean;
+  //next: QueuedSound | null;
+};
+
+export type BlockLayout = {
+  data: Uint8Array;
 };
