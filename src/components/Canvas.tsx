@@ -27,11 +27,14 @@ const Canvas = () => {
   const textContext = useRef<CanvasRenderingContext2D | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  //const canvasRect = useRef<DOMRect>({height: 0, width: 0, x: 0, y: 0, left: 0, bottom: 0, right: 0, top: 0});
   const webGPU = useRef<WebGPU | null>(null);
   const audio = useRef<Audio>(initAudio());
   const updateId = useRef<number | null>(null);
   const prevTime = useRef<number>(0);
   const gameInput = useRef<GameInput>({
+    mouseX: 0,
+    mouseY: 0,
     deltaTime: 16,
     buttons: Array.from({ length: 3 }, () => ({
       isDown: false,
@@ -165,44 +168,66 @@ const Canvas = () => {
     })),
   });
 
-  const processInput = (key: string, isDown: boolean) => {
+  const processKeyboard = (key: string, isDown: boolean) => {
     if (key === "ArrowLeft") {
-      processKeyboardState(
-        gameInput.current.buttons[Buttons.MOVE_LEFT],
-        isDown
-      );
+      processInputState(gameInput.current.buttons[Buttons.MOVE_LEFT], isDown);
     }
 
     if (key === "ArrowRight") {
-      processKeyboardState(
-        gameInput.current.buttons[Buttons.MOVE_RIGHT],
-        isDown
-      );
+      processInputState(gameInput.current.buttons[Buttons.MOVE_RIGHT], isDown);
     }
 
     if (key === " ") {
-      processKeyboardState(
+      processInputState(
         gameInput.current.buttons[Buttons.RELEASE_BALL],
         isDown
       );
     }
   };
 
-  const processKeyboardState = (button: ButtonState, isDown: boolean) => {
+  const processInputState = (button: ButtonState, isDown: boolean) => {
     if (button.isDown !== isDown) {
       button.isDown = isDown;
       button.changed = true;
     }
   };
 
+  const processMouse = (button: number, isDown: boolean) => {
+    if (button === 0) {
+      processInputState(
+        gameInput.current.buttons[Buttons.RELEASE_BALL],
+        isDown
+      );
+    }
+  };
+
   const handleKeyUp = (e: KeyboardEvent) => {
     const key = e.key;
-    processInput(key, false);
+    processKeyboard(key, false);
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
     const key = e.key;
-    processInput(key, true);
+    processKeyboard(key, true);
+  };
+
+  const handleMouseUp = (e: MouseEvent) => {
+    const button = e.button;
+    processMouse(button, false);
+  };
+
+  const handleMouseDown = (e: MouseEvent) => {
+    const button = e.button;
+    processMouse(button, true);
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (canvasRef.current !== null) {
+      const rect = canvasRef.current.getBoundingClientRect();
+      gameInput.current.mouseX = e.clientX - rect.left;
+      gameInput.current.mouseY = 600 - (e.clientY - rect.top);
+      //console.log(gameInput.current.mouseY);
+    }
   };
 
   const update = () => {
@@ -268,6 +293,9 @@ const Canvas = () => {
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("mousedown", handleMouseDown);
+    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("mousemove", handleMouseMove);
 
     const loadData = async () => {
       //if (!webGPU.current) {
@@ -308,6 +336,9 @@ const Canvas = () => {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mouseup", handleMouseUp);
       if (updateId.current) {
         cancelAnimationFrame(updateId.current);
         updateId.current = null;

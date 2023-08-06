@@ -447,25 +447,51 @@ export const gameUpdate = (
   //   }
   //console.log(state.sounds.length);
 
+  // pushObject(
+  //   commands,
+  //   MeshId.BALL,
+  //   V2(input.mouseX, input.mouseY),
+  //   V4(1, 0, 0, 1),
+  //   state.meshes
+  // );
+
   outputSound(state, soundBuffer);
 
-  if (isButtonDown(input.buttons[Buttons.MOVE_LEFT])) {
-    //console.log("left down");
-    //state.player.position.x -= state.playerSpeed * input.deltaTime;
-    state.player.velocity.x = -1 * state.playerSpeed;
-  }
+  const acceleration =
+    10 * (input.mouseX - state.player.position.x) -
+    0.5 * state.player.velocity.x;
+  // const acceleration =
+  //   200 * Math.sign(input.mouseX - state.player.position.x) -
+  //   0.5 * state.player.velocity.x;
+  //const acceleration = 1;
 
-  if (isButtonDown(input.buttons[Buttons.MOVE_RIGHT])) {
-    //console.log("left down");
-    //state.player.position.x += state.playerSpeed * input.deltaTime;
-    state.player.velocity.x = state.playerSpeed;
-  }
+  //state.player.velocity.x = input.mouseX - state.player.position.x;
+  //state.player.position.x += state.player.velocity.x;
+
+  state.player.velocity.x = state.player.velocity.x + acceleration;
+
+  state.player.position.x =
+    state.player.position.x +
+    state.player.velocity.x * input.deltaTime +
+    0.5 * input.deltaTime * input.deltaTime * acceleration;
+
+  // if (isButtonDown(input.buttons[Buttons.MOVE_LEFT])) {
+  //   //console.log("left down");
+  //   //state.player.position.x -= state.playerSpeed * input.deltaTime;
+  //   state.player.velocity.x = -1 * state.playerSpeed;
+  // }
+
+  // if (isButtonDown(input.buttons[Buttons.MOVE_RIGHT])) {
+  //   //console.log("left down");
+  //   //state.player.position.x += state.playerSpeed * input.deltaTime;
+  //   state.player.velocity.x = state.playerSpeed;
+  // }
 
   if (isButtonPressed(input.buttons[Buttons.RELEASE_BALL])) {
     for (const ball of state.balls) {
       if (!ball.isReleased) {
         ball.isReleased = true;
-        ball.velocity.x = state.player.velocity.x / 3;
+        ball.velocity.x = state.player.velocity.x;
         ball.velocity.y = 500;
         break;
         // state.isBallReleased = true;
@@ -603,8 +629,9 @@ export const gameUpdate = (
 
   renderParticles(state.trailEmitter, commands, state, input.deltaTime);
 
-  state.player.position.x += state.player.velocity.x * input.deltaTime;
-  state.player.velocity.x = 0;
+  //state.player.position.x += state.player.velocity.x * input.deltaTime;
+  //state.player.position.x += state.player.velocity.x;
+  //state.player.velocity.x = 0;
 
   state.remainingTime -= input.deltaTime;
 

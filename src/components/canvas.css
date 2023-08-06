@@ -8,8 +8,8 @@
 .game-canvas {
   /* width: 800px;
   height: 600px; */
-  image-rendering: pixelated;
-  animation: fix-image-rendering-bug 0.0001s;
+  /* image-rendering: pixelated;
+  animation: fix-image-rendering-bug 0.0001s; */
 }
 @keyframes fix-image-rendering-bug {
   from {

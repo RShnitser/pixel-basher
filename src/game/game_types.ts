@@ -31,6 +31,8 @@ export type ButtonState = {
 
 export type GameInput = {
   deltaTime: number;
+  mouseX: number;
+  mouseY: number;
   buttons: ButtonState[];
 };
 
