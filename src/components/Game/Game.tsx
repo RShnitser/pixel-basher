@@ -19,6 +19,25 @@ import { V2, V4 } from "../../game/math";
 import { fillSoundBuffer, initAudio, Audio, loadSound } from "../../game/audio";
 import "./Game.css";
 
+const PauseModal = () => {
+  return (
+    <>
+      <h2>Paused</h2>
+      <button type="button">Resume</button>
+    </>
+  );
+};
+
+const GameOverModal = () => {
+  return (
+    <>
+      <h2>Game Over</h2>
+      <div>Score</div>
+      <button type="button">Main Menu</button>
+    </>
+  );
+};
+
 const Game = () => {
   //const [score, setScore] = useState(0);
   //const [time, setTime] = useState(0);
@@ -36,7 +55,7 @@ const Game = () => {
     mouseX: 0,
     mouseY: 0,
     deltaTime: 16,
-    buttons: Array.from({ length: 3 }, () => ({
+    buttons: Array.from({ length: 4 }, () => ({
       isDown: false,
       changed: false,
     })),
@@ -44,6 +63,7 @@ const Game = () => {
   const gameState = useRef<GameState>({
     isInitialized: false,
     isGameOver: false,
+    isPaused: false,
     score: 0,
     remainingTime: 120,
     playerCount: 1,
@@ -94,6 +114,7 @@ const Game = () => {
     playerSpeed: 600,
 
     trailEmitter: {
+      isPaused: false,
       count: 0,
       maxCount: 64,
       position: V2(0, 0),
@@ -121,8 +142,8 @@ const Game = () => {
       //   indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
       // },
       createRectangle(100, 40),
-      createCircle(10, 8),
       createRectangle(10, 10),
+      createCircle(10, 8),
       //createCircle(30, 30),
     ],
     sounds: [],
@@ -183,6 +204,10 @@ const Game = () => {
         gameInput.current.buttons[Buttons.RELEASE_BALL],
         isDown
       );
+    }
+
+    if (key === "Escape") {
+      processInputState(gameInput.current.buttons[Buttons.PAUSE], isDown);
     }
   };
 

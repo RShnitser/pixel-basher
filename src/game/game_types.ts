@@ -4,6 +4,7 @@ export const Buttons = {
   MOVE_LEFT: 0,
   MOVE_RIGHT: 1,
   RELEASE_BALL: 2,
+  PAUSE: 3,
 } as const;
 
 export type Buttons = (typeof Buttons)[keyof typeof Buttons];
@@ -11,8 +12,8 @@ export type Buttons = (typeof Buttons)[keyof typeof Buttons];
 export const MeshId = {
   PLAYER: 0,
   BLOCK: 1,
-  BALL: 2,
-  PARTICLE: 3,
+  PARTICLE: 2,
+  BALL: 3,
 } as const;
 
 export type MeshId = (typeof MeshId)[keyof typeof MeshId];
@@ -39,6 +40,7 @@ export type GameInput = {
 export type GameState = {
   isInitialized: boolean;
   isGameOver: boolean;
+  isPaused: boolean;
 
   remainingTime: number;
   score: number;
@@ -105,6 +107,7 @@ export type Ball = {
 };
 
 export type ParticleEmitter = {
+  isPaused: boolean;
   count: number;
   maxCount: number;
   color: v4;

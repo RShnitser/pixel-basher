@@ -153,6 +153,7 @@ const createParticleEmitter = (
   meshId: MeshId
 ) => {
   const result: ParticleEmitter = {
+    isPaused: false,
     color,
     maxCount,
     count: 0,
@@ -182,22 +183,24 @@ const emitParticle = (
   //if (emitter.timeElapsed > emitter.rate) {
   //emitter.timeElapsed = 0;
 
-  const particle = emitter.particles[emitter.count];
-  //console.log(particle);
-  particle.position.x = emitter.position.x;
-  particle.position.y = emitter.position.y;
-  particle.velocity.x = velocity.x;
-  particle.velocity.y = velocity.y;
-  particle.lifeTime = lifeTime;
-  particle.currentLifeTime = lifeTime;
-  particle.color.x = color.x;
-  particle.color.y = color.y;
-  particle.color.z = color.z;
-  particle.color.w = color.w;
+  if (!emitter.isPaused) {
+    const particle = emitter.particles[emitter.count];
+    //console.log(particle);
+    particle.position.x = emitter.position.x;
+    particle.position.y = emitter.position.y;
+    particle.velocity.x = velocity.x;
+    particle.velocity.y = velocity.y;
+    particle.lifeTime = lifeTime;
+    particle.currentLifeTime = lifeTime;
+    particle.color.x = color.x;
+    particle.color.y = color.y;
+    particle.color.z = color.z;
+    particle.color.w = color.w;
 
-  emitter.count += 1;
-  if (emitter.count > emitter.maxCount - 1) {
-    emitter.count = 0;
+    emitter.count += 1;
+    if (emitter.count > emitter.maxCount - 1) {
+      emitter.count = 0;
+    }
   }
   //}
 };
@@ -430,9 +433,9 @@ export const gameInit = (state: GameState) => {
   setLayout(state, 0);
   playSound(state, SoundId.MUSIC, true);
 
-  for (let i = 0; i < 100; i++) {
-    console.log(getComboScore(i));
-  }
+  // for (let i = 0; i < 100; i++) {
+  //   console.log(getComboScore(i));
+  // }
 };
 
 export const gameUpdate = (
@@ -457,6 +460,15 @@ export const gameUpdate = (
 
   if (!state.isGameOver) {
     outputSound(state, soundBuffer);
+
+    if (isButtonPressed(input.buttons[Buttons.PAUSE])) {
+      state.isPaused = !state.isPaused;
+      state.trailEmitter.isPaused = !state.trailEmitter.isPaused;
+    }
+
+    if (state.isPaused) {
+      input.deltaTime = 0;
+    }
 
     const acceleration =
       10 * (input.mouseX - state.player.position.x) -
@@ -495,23 +507,24 @@ export const gameUpdate = (
     //   //state.player.position.x += state.playerSpeed * input.deltaTime;
     //   state.player.velocity.x = state.playerSpeed;
     // }
+    if (!state.isPaused) {
+      if (isButtonPressed(input.buttons[Buttons.RELEASE_BALL])) {
+        for (const ball of state.balls) {
+          if (!ball.isReleased) {
+            ball.isReleased = true;
+            ball.velocity.x = state.player.velocity.x;
+            ball.velocity.y = 500;
+            break;
+            // state.isBallReleased = true;
+            // state.balls[0].velocity.x = 50;
+            // state.balls[0].velocity.y = 500;
 
-    if (isButtonPressed(input.buttons[Buttons.RELEASE_BALL])) {
-      for (const ball of state.balls) {
-        if (!ball.isReleased) {
-          ball.isReleased = true;
-          ball.velocity.x = state.player.velocity.x;
-          ball.velocity.y = 500;
-          break;
-          // state.isBallReleased = true;
-          // state.balls[0].velocity.x = 50;
-          // state.balls[0].velocity.y = 500;
+            // state.balls[1].velocity.x = -50;
+            // state.balls[1].velocity.y = 500;
 
-          // state.balls[1].velocity.x = -50;
-          // state.balls[1].velocity.y = 500;
-
-          // state.balls[2].velocity.x = 20;
-          // state.balls[2].velocity.y = 500;
+            // state.balls[2].velocity.x = 20;
+            // state.balls[2].velocity.y = 500;
+          }
         }
       }
     }
