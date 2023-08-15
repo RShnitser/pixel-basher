@@ -5,21 +5,21 @@ import {
   GameInput,
   GameState,
   MeshId,
-} from "../game/game_types";
+} from "../../game/game_types";
 import {
   createCircle,
   createRectangle,
   gameInit,
   gameUpdate,
-} from "../game/game";
-import { initWebGPU, beginRender, endRender } from "../game/renderer";
-import { RendererCommands } from "../game/renderer_types";
-import { WebGPU } from "../game/renderer_types";
-import { V2, V4 } from "../game/math";
-import { fillSoundBuffer, initAudio, Audio, loadSound } from "../game/audio";
-import "./canvas.css";
+} from "../../game/game";
+import { initWebGPU, beginRender, endRender } from "../../game/renderer";
+import { RendererCommands } from "../../game/renderer_types";
+import { WebGPU } from "../../game/renderer_types";
+import { V2, V4 } from "../../game/math";
+import { fillSoundBuffer, initAudio, Audio, loadSound } from "../../game/audio";
+import "./Game.css";
 
-const Canvas = () => {
+const Game = () => {
   //const [score, setScore] = useState(0);
   //const [time, setTime] = useState(0);
 
@@ -43,6 +43,7 @@ const Canvas = () => {
   });
   const gameState = useRef<GameState>({
     isInitialized: false,
+    isGameOver: false,
     score: 0,
     remainingTime: 120,
     playerCount: 1,
@@ -348,11 +349,7 @@ const Canvas = () => {
   }, []);
 
   return (
-    <>
-      {/* <div className="score-container">
-        <div>{score}</div>
-        <div>{time.toFixed(2)}</div>
-      </div> */}
+    <div className="canvas-container">
       <canvas
         className="text-canvas"
         width={800}
@@ -365,8 +362,8 @@ const Canvas = () => {
         height={600}
         ref={canvasRef}
       ></canvas>
-    </>
+    </div>
   );
 };
 
-export default Canvas;
+export default Game;

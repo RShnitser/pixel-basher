@@ -12,7 +12,7 @@ import {
 import { pushObject } from "./renderer";
 import { RendererCommands } from "./renderer_types";
 import { v2, v4 } from "./math_types";
-import { addV2, mulV2, randomRange, reflectV2, V2, V4 } from "./math";
+import { mulV2, randomRange, reflectV2, V2, V4 } from "./math";
 import { Hit } from "./game_types";
 //import { playSound } from "./audio";
 
@@ -404,7 +404,7 @@ const setLayout = (state: GameState, layoutIndex: number) => {
         const block = state.blocks[index];
         block.hp = value;
         block.position.x = ((index * 100) % 800) + 50;
-        (block.position.y = 600 - Math.floor(index / 8) * 40 - 20),
+        (block.position.y = 600 - Math.floor(index / 8) * 40 - 40),
           state.blockCount++;
       }
 
@@ -455,185 +455,204 @@ export const gameUpdate = (
   //   state.meshes
   // );
 
-  outputSound(state, soundBuffer);
+  if (!state.isGameOver) {
+    outputSound(state, soundBuffer);
 
-  const acceleration =
-    10 * (input.mouseX - state.player.position.x) -
-    0.5 * state.player.velocity.x;
-  // const acceleration =
-  //   200 * Math.sign(input.mouseX - state.player.position.x) -
-  //   0.5 * state.player.velocity.x;
-  //const acceleration = 1;
+    const acceleration =
+      10 * (input.mouseX - state.player.position.x) -
+      0.5 * state.player.velocity.x;
+    // const acceleration =
+    //   200 * Math.sign(input.mouseX - state.player.position.x) -
+    //   0.5 * state.player.velocity.x;
+    //const acceleration = 1;
 
-  //state.player.velocity.x = input.mouseX - state.player.position.x;
-  //state.player.position.x += state.player.velocity.x;
+    //state.player.velocity.x = input.mouseX - state.player.position.x;
+    //state.player.position.x += state.player.velocity.x;
 
-  state.player.velocity.x = state.player.velocity.x + acceleration;
+    state.player.velocity.x = state.player.velocity.x + acceleration;
 
-  state.player.position.x =
-    state.player.position.x +
-    state.player.velocity.x * input.deltaTime +
-    0.5 * input.deltaTime * input.deltaTime * acceleration;
+    state.player.position.x =
+      state.player.position.x +
+      state.player.velocity.x * input.deltaTime +
+      0.5 * input.deltaTime * input.deltaTime * acceleration;
 
-  // if (isButtonDown(input.buttons[Buttons.MOVE_LEFT])) {
-  //   //console.log("left down");
-  //   //state.player.position.x -= state.playerSpeed * input.deltaTime;
-  //   state.player.velocity.x = -1 * state.playerSpeed;
-  // }
+    if (state.player.position.x < 50) {
+      state.player.position.x = 50;
+    }
 
-  // if (isButtonDown(input.buttons[Buttons.MOVE_RIGHT])) {
-  //   //console.log("left down");
-  //   //state.player.position.x += state.playerSpeed * input.deltaTime;
-  //   state.player.velocity.x = state.playerSpeed;
-  // }
+    if (state.player.position.x > 750) {
+      state.player.position.x = 750;
+    }
 
-  if (isButtonPressed(input.buttons[Buttons.RELEASE_BALL])) {
-    for (const ball of state.balls) {
-      if (!ball.isReleased) {
-        ball.isReleased = true;
-        ball.velocity.x = state.player.velocity.x;
-        ball.velocity.y = 500;
-        break;
-        // state.isBallReleased = true;
-        // state.balls[0].velocity.x = 50;
-        // state.balls[0].velocity.y = 500;
+    // if (isButtonDown(input.buttons[Buttons.MOVE_LEFT])) {
+    //   //console.log("left down");
+    //   //state.player.position.x -= state.playerSpeed * input.deltaTime;
+    //   state.player.velocity.x = -1 * state.playerSpeed;
+    // }
 
-        // state.balls[1].velocity.x = -50;
-        // state.balls[1].velocity.y = 500;
+    // if (isButtonDown(input.buttons[Buttons.MOVE_RIGHT])) {
+    //   //console.log("left down");
+    //   //state.player.position.x += state.playerSpeed * input.deltaTime;
+    //   state.player.velocity.x = state.playerSpeed;
+    // }
 
-        // state.balls[2].velocity.x = 20;
-        // state.balls[2].velocity.y = 500;
+    if (isButtonPressed(input.buttons[Buttons.RELEASE_BALL])) {
+      for (const ball of state.balls) {
+        if (!ball.isReleased) {
+          ball.isReleased = true;
+          ball.velocity.x = state.player.velocity.x;
+          ball.velocity.y = 500;
+          break;
+          // state.isBallReleased = true;
+          // state.balls[0].velocity.x = 50;
+          // state.balls[0].velocity.y = 500;
+
+          // state.balls[1].velocity.x = -50;
+          // state.balls[1].velocity.y = 500;
+
+          // state.balls[2].velocity.x = 20;
+          // state.balls[2].velocity.y = 500;
+        }
       }
     }
-  }
 
-  //   if (isButtonReleased(input.buttons[Buttons.MOVE_LEFT])) {
-  //     console.log("left up");
-  //   }
+    //   if (isButtonReleased(input.buttons[Buttons.MOVE_LEFT])) {
+    //     console.log("left up");
+    //   }
 
-  pushObject(
-    commands,
-    state.player.meshId,
-    state.player.position,
-    state.player.color,
-    state.meshes
-  );
+    pushObject(
+      commands,
+      state.player.meshId,
+      state.player.position,
+      state.player.color,
+      state.meshes
+    );
 
-  //for (const block of state.blocks) {
-  for (let b = 0; b < state.blocks.length; b++) {
-    const block = state.blocks[b];
-    if (block.hp > 0) {
-      for (const ball of state.balls) {
-        const hit = checkCircleRectangleCollision(
-          ball.position,
-          //addV2(ball.position, mulV2(input.deltaTime, ball.velocity)),
-          //mulV2(input.deltaTime, subV2(block.velocity, ball.velocity)),
-          mulV2(input.deltaTime, ball.velocity),
-          10,
-          block.position,
-          90,
-          30
-        );
+    //for (const block of state.blocks) {
+    for (let b = 0; b < state.blocks.length; b++) {
+      const block = state.blocks[b];
+      if (block.hp > 0) {
+        for (const ball of state.balls) {
+          const hit = checkCircleRectangleCollision(
+            ball.position,
+            //addV2(ball.position, mulV2(input.deltaTime, ball.velocity)),
+            //mulV2(input.deltaTime, subV2(block.velocity, ball.velocity)),
+            mulV2(input.deltaTime, ball.velocity),
+            10,
+            block.position,
+            90,
+            30
+          );
 
-        if (hit.isHit) {
-          playSound(state, SoundId.HIT);
-          block.hp -= 1;
-          ball.position.x = hit.hitPosition.x;
-          ball.position.y = hit.hitPosition.y;
-          ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
-          //state.ball.velocity.y = 0;
+          if (hit.isHit) {
+            playSound(state, SoundId.HIT);
+            block.hp -= 1;
+            ball.position.x = hit.hitPosition.x;
+            ball.position.y = hit.hitPosition.y;
+            ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
+            //state.ball.velocity.y = 0;
 
-          if (block.hp <= 0) {
-            emitBurst(state.trailEmitter, 15, 3, V4(0, 1, 0, 1));
-            state.blockCount--;
-            state.score += getComboScore(ball.combo);
-            ball.combo++;
+            if (block.hp <= 0) {
+              emitBurst(state.trailEmitter, 15, 3, V4(0, 1, 0, 1));
+              state.blockCount--;
+              state.score += getComboScore(ball.combo);
+              ball.combo++;
 
-            if (state.blockCount === 0) {
-              resetBalls(state);
-              setLayout(state, 0);
+              if (state.blockCount === 0) {
+                resetBalls(state);
+                setLayout(state, 0);
+              }
             }
           }
         }
-      }
 
-      // if (b === 0) {
-      //   console.log(block.position);
-      // }
-      //block.position.x += block.velocity.x * input.deltaTime;
-      //block.position.y += block.velocity.y * input.deltaTime;
+        // if (b === 0) {
+        //   console.log(block.position);
+        // }
+        //block.position.x += block.velocity.x * input.deltaTime;
+        //block.position.y += block.velocity.y * input.deltaTime;
+
+        pushObject(
+          commands,
+          block.meshId,
+          block.position,
+          block.color,
+          state.meshes
+        );
+      }
+    }
+
+    //const newBallPos = addV2(state.ball.position, state.ball.velocity);
+
+    for (const ball of state.balls) {
+      if (ball.isReleased) {
+        const hit = checkCircleRectangleCollision(
+          ball.position,
+          mulV2(input.deltaTime, ball.velocity),
+          10,
+          state.player.position,
+          90,
+          30
+        );
+        if (hit.isHit) {
+          ball.position.x = hit.hitPosition.x;
+          ball.position.y = hit.hitPosition.y;
+          ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
+        }
+
+        ball.position.x += ball.velocity.x * input.deltaTime;
+        ball.position.y += ball.velocity.y * input.deltaTime;
+
+        state.trailEmitter.position.x = ball.position.x;
+        state.trailEmitter.position.y = ball.position.y;
+        emitParticle(state.trailEmitter, 0.5, V2(0, 0), V4(0.8, 0.8, 1, 1));
+
+        if (ball.position.x < 10) {
+          ball.position.x = 10;
+          ball.velocity = reflectV2(ball.velocity, { x: 1, y: 0 });
+        }
+
+        if (ball.position.x > 790) {
+          ball.position.x = 790;
+          ball.velocity = reflectV2(ball.velocity, { x: -1, y: 0 });
+        }
+
+        if (ball.position.y > 590) {
+          ball.position.y = 590;
+          ball.velocity = reflectV2(ball.velocity, { x: 0, y: -1 });
+        }
+        if (ball.position.y < 0) {
+          ball.velocity.x = 0;
+          ball.velocity.y = 0;
+          ball.isReleased = false;
+          ball.combo = 0;
+          //ball.velocity = reflectV2(ball.velocity, { x: 0, y: -1 });
+        }
+      } else {
+        ball.position.x = state.player.position.x;
+        ball.position.y = state.player.position.y + 25;
+      }
 
       pushObject(
         commands,
-        block.meshId,
-        block.position,
-        block.color,
+        ball.meshId,
+        ball.position,
+        ball.color,
         state.meshes
       );
     }
-  }
 
-  //const newBallPos = addV2(state.ball.position, state.ball.velocity);
+    renderParticles(state.trailEmitter, commands, state, input.deltaTime);
 
-  for (const ball of state.balls) {
-    if (ball.isReleased) {
-      const hit = checkCircleRectangleCollision(
-        ball.position,
-        mulV2(input.deltaTime, ball.velocity),
-        10,
-        state.player.position,
-        90,
-        30
-      );
-      if (hit.isHit) {
-        ball.position.x = hit.hitPosition.x;
-        ball.position.y = hit.hitPosition.y;
-        ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
-      }
+    //state.player.position.x += state.player.velocity.x * input.deltaTime;
+    //state.player.position.x += state.player.velocity.x;
+    //state.player.velocity.x = 0;
 
-      ball.position.x += ball.velocity.x * input.deltaTime;
-      ball.position.y += ball.velocity.y * input.deltaTime;
-
-      state.trailEmitter.position.x = ball.position.x;
-      state.trailEmitter.position.y = ball.position.y;
-      emitParticle(state.trailEmitter, 0.5, V2(0, 0), V4(0.8, 0.8, 1, 1));
-
-      if (ball.position.x < 10) {
-        ball.position.x = 10;
-        ball.velocity = reflectV2(ball.velocity, { x: 1, y: 0 });
-      }
-
-      if (ball.position.x > 790) {
-        ball.position.x = 790;
-        ball.velocity = reflectV2(ball.velocity, { x: -1, y: 0 });
-      }
-
-      if (ball.position.y > 590) {
-        ball.position.y = 590;
-        ball.velocity = reflectV2(ball.velocity, { x: 0, y: -1 });
-      }
-      if (ball.position.y < 0) {
-        ball.velocity.x = 0;
-        ball.velocity.y = 0;
-        ball.isReleased = false;
-        ball.combo = 0;
-        //ball.velocity = reflectV2(ball.velocity, { x: 0, y: -1 });
-      }
-    } else {
-      ball.position.x = state.player.position.x;
-      ball.position.y = state.player.position.y + 25;
+    state.remainingTime -= input.deltaTime;
+    if (state.remainingTime < 0) {
+      state.isGameOver = true;
     }
-
-    pushObject(commands, ball.meshId, ball.position, ball.color, state.meshes);
   }
-
-  renderParticles(state.trailEmitter, commands, state, input.deltaTime);
-
-  //state.player.position.x += state.player.velocity.x * input.deltaTime;
-  //state.player.position.x += state.player.velocity.x;
-  //state.player.velocity.x = 0;
-
-  state.remainingTime -= input.deltaTime;
 
   //pushRenderGroup(commands, 1, state.blockPositions.length, state.assets);
 };

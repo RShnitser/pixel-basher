@@ -38,6 +38,7 @@ export type GameInput = {
 
 export type GameState = {
   isInitialized: boolean;
+  isGameOver: boolean;
 
   remainingTime: number;
   score: number;

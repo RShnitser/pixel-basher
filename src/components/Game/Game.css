@@ -1,0 +1,16 @@
+.text-canvas {
+  position: absolute;
+  color: black;
+  background-color: lightskyblue;
+  z-index: 2;
+}
+
+.game-canvas {
+  position: absolute;
+}
+
+.canvas-container {
+  width: 800px;
+  margin: 0 auto;
+  position: relative;
+}
