@@ -18,29 +18,31 @@ import { WebGPU } from "../../game/renderer_types";
 import { V2, V4 } from "../../game/math";
 import { fillSoundBuffer, initAudio, Audio, loadSound } from "../../game/audio";
 import "./Game.css";
+import Modal from "../Modal/Modal";
 
-const PauseModal = () => {
-  return (
-    <>
-      <h2>Paused</h2>
-      <button type="button">Resume</button>
-    </>
-  );
-};
+// const PauseModal = () => {
+//   return (
+//     <>
+//       <h2>Paused</h2>
+//       <button type="button">Resume</button>
+//     </>
+//   );
+// };
 
-const GameOverModal = () => {
-  return (
-    <>
-      <h2>Game Over</h2>
-      <div>Score</div>
-      <button type="button">Main Menu</button>
-    </>
-  );
-};
+// const GameOverModal = () => {
+//   return (
+//     <>
+//       <h2>Game Over</h2>
+//       <div>Score</div>
+//       <button type="button">Main Menu</button>
+//     </>
+//   );
+// };
 
 const Game = () => {
   //const [score, setScore] = useState(0);
   //const [time, setTime] = useState(0);
+  const [pause, setPause] = useState(true);
 
   const textRef = useRef<HTMLCanvasElement | null>(null);
   const textContext = useRef<CanvasRenderingContext2D | null>(null);
@@ -374,7 +376,14 @@ const Game = () => {
   }, []);
 
   return (
+    // <>
     <div className="canvas-container">
+      <Modal isOpen={pause}>
+        <div>Pause</div>
+        <button type="button" onClick={() => setPause(false)}>
+          Resume
+        </button>
+      </Modal>
       <canvas
         className="text-canvas"
         width={800}
@@ -388,6 +397,7 @@ const Game = () => {
         ref={canvasRef}
       ></canvas>
     </div>
+    // {/* </> */}
   );
 };
 
