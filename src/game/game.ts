@@ -458,12 +458,12 @@ export const gameUpdate = (
   //   state.meshes
   // );
 
+  outputSound(state, soundBuffer);
   if (!state.isGameOver) {
-    outputSound(state, soundBuffer);
-
     if (isButtonPressed(input.buttons[Buttons.PAUSE])) {
       state.isPaused = !state.isPaused;
       state.trailEmitter.isPaused = !state.trailEmitter.isPaused;
+      state.setPause();
     }
 
     if (state.isPaused) {
@@ -664,6 +664,7 @@ export const gameUpdate = (
     state.remainingTime -= input.deltaTime;
     if (state.remainingTime < 0) {
       state.isGameOver = true;
+      state.setGameOver();
     }
   }
 

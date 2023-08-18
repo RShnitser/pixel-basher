@@ -74,6 +74,8 @@ export type GameState = {
 
   //soundHead: QueuedSound | null;
   //soundFreeHead: QueuedSound | null;
+  setPause: () => void;
+  setGameOver: () => void;
 };
 
 export type Mesh = {

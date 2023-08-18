@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Buttons,
   ButtonState,
@@ -42,7 +43,9 @@ import Modal from "../Modal/Modal";
 const Game = () => {
   //const [score, setScore] = useState(0);
   //const [time, setTime] = useState(0);
-  const [pause, setPause] = useState(true);
+  const navigate = useNavigate();
+  const [pause, setPause] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
 
   const textRef = useRef<HTMLCanvasElement | null>(null);
   const textContext = useRef<CanvasRenderingContext2D | null>(null);
@@ -67,7 +70,7 @@ const Game = () => {
     isGameOver: false,
     isPaused: false,
     score: 0,
-    remainingTime: 120,
+    remainingTime: 2,
     playerCount: 1,
     //playerPosition: { x: 400, y: 550 },
     player: {
@@ -168,6 +171,13 @@ const Game = () => {
       isLooping: false,
       isActive: false,
     })),
+
+    setPause: () => {
+      setPause(gameState.current.isPaused);
+    },
+    setGameOver: () => {
+      setGameOver(gameState.current.isGameOver);
+    },
 
     //soundHead: null,
     //soundFreeHead: null,
@@ -315,7 +325,21 @@ const Game = () => {
     }
 
     prevTime.current = now;
-    requestAnimationFrame(update);
+    updateId.current = requestAnimationFrame(update);
+  };
+
+  const cleanUp = () => {
+    window.removeEventListener("keydown", handleKeyDown);
+    window.removeEventListener("keyup", handleKeyUp);
+    window.removeEventListener("mousemove", handleMouseMove);
+    window.removeEventListener("mousedown", handleMouseDown);
+    window.removeEventListener("mouseup", handleMouseUp);
+    console.log(updateId.current);
+    if (updateId.current !== null) {
+      console.log("cancel");
+      cancelAnimationFrame(updateId.current);
+      updateId.current = null;
+    }
   };
 
   useEffect(() => {
@@ -375,13 +399,35 @@ const Game = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const mainMenu = () => {
+    //audio.current.context.close();
+
+    cleanUp();
+    navigate("/");
+  };
+
+  const resumeGame = () => {
+    gameState.current.isPaused = false;
+    setPause(false);
+  };
+
   return (
     // <>
     <div className="canvas-container">
       <Modal isOpen={pause}>
         <div>Pause</div>
-        <button type="button" onClick={() => setPause(false)}>
+        <button type="button" onClick={resumeGame}>
           Resume
+        </button>
+        <button type="button" onClick={mainMenu}>
+          Quit
+        </button>
+      </Modal>
+      <Modal isOpen={gameOver}>
+        <div>Score</div>
+        <div>{gameState.current.score}</div>
+        <button type="button" onClick={mainMenu}>
+          Quit
         </button>
       </Modal>
       <canvas
