@@ -20,6 +20,7 @@ import { V2, V4 } from "../../game/math";
 import { fillSoundBuffer, initAudio, Audio, loadSound } from "../../game/audio";
 import "./Game.css";
 import Modal from "../Modal/Modal";
+import { useGame } from "../../providers/GameProvider";
 
 // const PauseModal = () => {
 //   return (
@@ -43,6 +44,7 @@ import Modal from "../Modal/Modal";
 const Game = () => {
   //const [score, setScore] = useState(0);
   //const [time, setTime] = useState(0);
+  const { layouts, selectedLayout } = useGame();
   const navigate = useNavigate();
   const [pause, setPause] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -70,7 +72,7 @@ const Game = () => {
     isGameOver: false,
     isPaused: false,
     score: 0,
-    remainingTime: 2,
+    remainingTime: 120,
     playerCount: 1,
     //playerPosition: { x: 400, y: 550 },
     player: {
@@ -152,15 +154,9 @@ const Game = () => {
       //createCircle(30, 30),
     ],
     sounds: [],
-    layouts: [
-      {
-        data: new Uint8Array([
-          1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0,
-          1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
-          1, 1,
-        ]),
-      },
-    ],
+    layout: null,
+    // layouts: [
+    // ],
 
     currentSound: 0,
     maxSounds: 16,
@@ -361,6 +357,7 @@ const Game = () => {
         gameState.current.meshes
       );
       //if (!gameState.current.isInitialized) {
+      gameState.current.layout = layouts[selectedLayout];
       gameInit(gameState.current);
 
       if (textRef.current !== null) {

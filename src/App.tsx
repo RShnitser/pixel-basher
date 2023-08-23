@@ -7,9 +7,11 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import Game from "./components/Game/Game";
-import MainMenu from "./components/MainMenu/MainMenu";
-import Score from "./components/Score/Score";
+import LoginUser from "./components/LoginUser/LoginUser";
+import CreateUser from "./components/CreateUser/CreateUser";
+import GameApp from "./components/GameApp/GameApp";
+import { GameProvider } from "./providers/GameProvider";
+import { AuthProvider } from "./providers/AuthProvider";
 import "./App.css";
 
 const PrivateRoute = () => {
@@ -31,13 +33,22 @@ const PrivateRoute = () => {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MainMenu />} />
-        <Route path="/game" element={<Game />} />
-        <Route path="/score" element={<Score />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <GameProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* <Route path="/" element={<MainMenu />} />
+            <Route path="/game" element={<Game />} />
+            <Route path="/score" element={<Score />} /> */}
+            <Route path="/login" element={<LoginUser />} />
+            <Route path="/create" element={<CreateUser />} />
+            <Route element={<PrivateRoute />}>
+              <Route path="*" element={<GameApp />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </GameProvider>
+    </AuthProvider>
   );
 }
 

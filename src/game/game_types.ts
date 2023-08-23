@@ -66,7 +66,7 @@ export type GameState = {
 
   meshes: Mesh[];
   sounds: Sound[];
-  layouts: BlockLayout[];
+  layout: BlockLayout | null;
 
   currentSound: number;
   maxSounds: number;

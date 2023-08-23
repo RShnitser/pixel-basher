@@ -395,20 +395,22 @@ const resetBalls = (state: GameState) => {
   }
 };
 
-const setLayout = (state: GameState, layoutIndex: number) => {
-  const layout = state.layouts[layoutIndex].data;
-  state.blockCount = 0;
-  for (let x = 0; x < 8; x++) {
-    for (let y = 0; y < 6; y++) {
-      const index = y * 8 + x;
+const setLayout = (state: GameState) => {
+  if (state.layout !== null) {
+    const layout = state.layout.data;
+    state.blockCount = 0;
+    for (let x = 0; x < 8; x++) {
+      for (let y = 0; y < 6; y++) {
+        const index = y * 8 + x;
 
-      const value = layout[index];
-      if (value) {
-        const block = state.blocks[index];
-        block.hp = value;
-        block.position.x = ((index * 100) % 800) + 50;
-        (block.position.y = 600 - Math.floor(index / 8) * 40 - 40),
-          state.blockCount++;
+        const value = layout[index];
+        if (value) {
+          const block = state.blocks[index];
+          block.hp = value;
+          block.position.x = ((index * 100) % 800) + 50;
+          (block.position.y = 600 - Math.floor(index / 8) * 40 - 40),
+            state.blockCount++;
+        }
       }
 
       // if (value) {
@@ -430,7 +432,7 @@ const setLayout = (state: GameState, layoutIndex: number) => {
 };
 
 export const gameInit = (state: GameState) => {
-  setLayout(state, 0);
+  setLayout(state);
   playSound(state, SoundId.MUSIC, true);
 
   // for (let i = 0; i < 100; i++) {
@@ -573,7 +575,7 @@ export const gameUpdate = (
 
               if (state.blockCount === 0) {
                 resetBalls(state);
-                setLayout(state, 0);
+                setLayout(state);
               }
             }
           }
