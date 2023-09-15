@@ -1,12 +1,11 @@
-.menu-container {
+.login-container {
   text-align: center;
-  background-color: #0832d1;
-  padding-bottom: 50px;
   padding: 20px 0;
   color: white;
+  background-color: #0832d1;
 }
 
-.title {
+.login-title {
   font-size: 3rem;
   color: black;
   --sw: 2px;
@@ -16,20 +15,42 @@
 
   background-image: url("/public/BG.png");
   padding: 18px 0;
-  margin: 0;
 }
 
-.button {
+.input-error {
+  color: red;
+}
+
+.input-container {
+  display: block;
+  margin-bottom: 20px;
+}
+
+input:focus {
+  border: 4px solid yellow;
+}
+
+input {
   outline: 0;
-  font-family: inherit;
   background-color: white;
   border: 2px solid black;
   padding: 10px;
   box-shadow: 4px 4px #102883, -4px -4px #7285cc;
 }
 
-.ratio-wrapper {
-  max-width: 800px;
-  margin: 0 auto;
-  aspect-ratio: 4 /3;
+a {
+  color: yellow;
+  text-decoration: none;
+}
+
+a:visited {
+  color: yellow;
+}
+
+h2 {
+  font-size: 3rem;
+}
+
+h3 {
+  font-size: 1.8rem;
 }

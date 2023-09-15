@@ -14,37 +14,6 @@ import { RendererCommands } from "./renderer_types";
 import { v2, v4 } from "./math_types";
 import { mulV2, randomRange, reflectV2, V2, V4 } from "./math";
 import { Hit } from "./game_types";
-//import { playSound } from "./audio";
-
-// const GetFileHeader = (a: number, b: number, c: number, d: number) => {
-//   const result = a | (b << 8) | (c << 16) | (d << 24);
-//   return result;
-// };
-
-// const FileHeader = {
-//   RIFF: GetFileHeader(
-//     "R".charCodeAt(0),
-//     "I".charCodeAt(0),
-//     "F".charCodeAt(0),
-//     "F".charCodeAt(0)
-//   ),
-//   WAVE: GetFileHeader(
-//     "W".charCodeAt(0),
-//     "A".charCodeAt(0),
-//     "V".charCodeAt(0),
-//     "E".charCodeAt(0)
-//   ),
-// } as const;
-
-// export const decodeWAV = (buffer: ArrayBuffer) => {
-//   const dataView = new DataView(buffer);
-//   const riffId = dataView.getUint32(4);
-//   console.log(riffId);
-//   console.log(buffer.byteLength);
-//   //const waveId = new Uint32Array(buffer, 8, 1)[0];
-//   //const fileSize = new Uint32Array(buffer, 4, 1)[0];
-//   //console.log(riffId === FileHeader.RIFF);
-// };
 
 const comboScore = [
   1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7,
@@ -54,23 +23,16 @@ const comboScore = [
   13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 15,
   15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
 ];
-//const scoreLog = 1 / Math.log(1.5);
+
 const getComboScore = (combo: number) => {
-  //console.log(comboScore.length);
   if (combo > 120) {
     return 16;
   }
-  //const result = Math.floor(scoreLog * Math.log(combo));
   const result = comboScore[combo];
   return result;
 };
 
-// function getBaseLog(x: number, y: number) {
-//   return Math.log(y) / Math.log(x);
-// }
-
 const playSound = (state: GameState, id: SoundId, isLooping = false) => {
-  //const queuedSound = state.soundQueue[state.currentSound];
   if (state.currentSound === state.maxSounds) {
     return;
   }
@@ -99,10 +61,7 @@ const outputSound = (state: GameState, soundBuffer: SoundBuffer) => {
 
     for (let s = 0; s < state.maxSounds; s++) {
       const queuedSound = state.soundQueue[s];
-      //let queuedSound = state.soundHead;
-      //while (queuedSound !== null) {
-      //console.log(queuedSound);
-      //const nextQueuedSound = queuedSound.next;
+
       if (queuedSound.isActive) {
         const sound = state.sounds[queuedSound.soundId];
 
@@ -117,61 +76,47 @@ const outputSound = (state: GameState, soundBuffer: SoundBuffer) => {
             queuedSound.samplesRead = 0;
           } else {
             queuedSound.isActive = false;
-            // if (s < state.currentSound - 1) {
-            //   const temp = state.sounds[s];
-            //   state.sounds[s] = state.sounds[state.currentSound - 1];
-            //   state.sounds[state.currentSound - 1] = temp;
-            //   s--;
-            // }
             state.currentSound--;
-            //queuedSound.next = state.soundFreeHead;
-            //state.soundFreeHead = queuedSound;
           }
         }
       }
-      //queuedSound = nextQueuedSound;
     }
 
     for (let c = 0; c < channelCount; c++) {
       soundBuffer.samples[bufferIndex + c] = sampleSums[c] * 0.5;
     }
-    // state.testSampleIndex++;
-    // if (state.testSampleIndex > sound.sampleCount) {
-    //   state.testSampleIndex = 0;
-    // }
+
     bufferIndex += channelCount;
   }
-
-  //state.testSampleIndex += soundBuffer.sampleCount;
 };
 
-const createParticleEmitter = (
-  color: v4,
-  position: v2,
-  maxCount: number,
-  rate: number,
-  meshId: MeshId
-) => {
-  const result: ParticleEmitter = {
-    isPaused: false,
-    color,
-    maxCount,
-    count: 0,
-    position,
-    rate,
-    timeElapsed: 0,
-    meshId,
-    particles: Array.from({ length: maxCount }, () => ({
-      color: V4(0, 0, 0, 0),
-      position: V2(0, 0),
-      velocity: V2(0, 0),
-      currentLifeTime: 0,
-      lifeTime: 0,
-    })),
-  };
+// const createParticleEmitter = (
+//   color: v4,
+//   position: v2,
+//   maxCount: number,
+//   rate: number,
+//   meshId: MeshId
+// ) => {
+//   const result: ParticleEmitter = {
+//     isPaused: false,
+//     color,
+//     maxCount,
+//     count: 0,
+//     position,
+//     rate,
+//     timeElapsed: 0,
+//     meshId,
+//     particles: Array.from({ length: maxCount }, () => ({
+//       color: V4(0, 0, 0, 0),
+//       position: V2(0, 0),
+//       velocity: V2(0, 0),
+//       currentLifeTime: 0,
+//       lifeTime: 0,
+//     })),
+//   };
 
-  return result;
-};
+//   return result;
+// };
 
 const emitParticle = (
   emitter: ParticleEmitter,
@@ -179,13 +124,8 @@ const emitParticle = (
   velocity: v2,
   color: v4
 ) => {
-  //emitter.timeElapsed += deltaTime;
-  //if (emitter.timeElapsed > emitter.rate) {
-  //emitter.timeElapsed = 0;
-
   if (!emitter.isPaused) {
     const particle = emitter.particles[emitter.count];
-    //console.log(particle);
     particle.position.x = emitter.position.x;
     particle.position.y = emitter.position.y;
     particle.velocity.x = velocity.x;
@@ -372,20 +312,20 @@ const checkCircleRectangleCollision = (
 //   return result;
 // };
 
-const isButtonDown = (button: ButtonState) => {
-  const result = button.isDown;
-  return result;
-};
+// const isButtonDown = (button: ButtonState) => {
+//   const result = button.isDown;
+//   return result;
+// };
 
 const isButtonPressed = (button: ButtonState) => {
   const result = button.isDown && button.changed;
   return result;
 };
 
-const isButtonReleased = (button: ButtonState) => {
-  const result = !button.isDown && button.changed;
-  return result;
-};
+// const isButtonReleased = (button: ButtonState) => {
+//   const result = !button.isDown && button.changed;
+//   return result;
+// };
 
 const resetBalls = (state: GameState) => {
   for (const ball of state.balls) {
@@ -412,21 +352,6 @@ const setLayout = (state: GameState) => {
             state.blockCount++;
         }
       }
-
-      // if (value) {
-      //   const block: Block = {
-      //     meshId: MeshId.BLOCK,
-      //     hp: 1,
-      //     color: { x: 0, y: 0, z: (index + 1) / (8 * 6), w: 1 },
-      //     position: {
-      //       x: ((index * 100) % 800) + 50,
-      //       y: 600 - Math.floor(index / 8) * 40 - 20,
-      //     },
-      //     velocity: V2(0, -10),
-      //   };
-      //   state.blocks.push(block);
-      //   state.blockCount += 1;
-      // }
     }
   }
 };
@@ -434,10 +359,6 @@ const setLayout = (state: GameState) => {
 export const gameInit = (state: GameState) => {
   setLayout(state);
   playSound(state, SoundId.MUSIC, true);
-
-  // for (let i = 0; i < 100; i++) {
-  //   console.log(getComboScore(i));
-  // }
 };
 
 export const gameUpdate = (
@@ -445,21 +366,7 @@ export const gameUpdate = (
   input: GameInput,
   commands: RendererCommands,
   soundBuffer: SoundBuffer
-  //audio: AudioContext
 ) => {
-  //   if (isButtonPressed(input.buttons[Buttons.MOVE_LEFT])) {
-  //     console.log("left pressed");
-  //   }
-  //console.log(state.sounds.length);
-
-  // pushObject(
-  //   commands,
-  //   MeshId.BALL,
-  //   V2(input.mouseX, input.mouseY),
-  //   V4(1, 0, 0, 1),
-  //   state.meshes
-  // );
-
   outputSound(state, soundBuffer);
   if (!state.isGameOver) {
     if (isButtonPressed(input.buttons[Buttons.PAUSE])) {
@@ -474,14 +381,7 @@ export const gameUpdate = (
 
     const acceleration =
       10 * (input.mouseX - state.player.position.x) -
-      0.5 * state.player.velocity.x;
-    // const acceleration =
-    //   200 * Math.sign(input.mouseX - state.player.position.x) -
-    //   0.5 * state.player.velocity.x;
-    //const acceleration = 1;
-
-    //state.player.velocity.x = input.mouseX - state.player.position.x;
-    //state.player.position.x += state.player.velocity.x;
+      1.5 * state.player.velocity.x;
 
     state.player.velocity.x = state.player.velocity.x + acceleration;
 
@@ -498,17 +398,6 @@ export const gameUpdate = (
       state.player.position.x = 750;
     }
 
-    // if (isButtonDown(input.buttons[Buttons.MOVE_LEFT])) {
-    //   //console.log("left down");
-    //   //state.player.position.x -= state.playerSpeed * input.deltaTime;
-    //   state.player.velocity.x = -1 * state.playerSpeed;
-    // }
-
-    // if (isButtonDown(input.buttons[Buttons.MOVE_RIGHT])) {
-    //   //console.log("left down");
-    //   //state.player.position.x += state.playerSpeed * input.deltaTime;
-    //   state.player.velocity.x = state.playerSpeed;
-    // }
     if (!state.isPaused) {
       if (isButtonPressed(input.buttons[Buttons.RELEASE_BALL])) {
         for (const ball of state.balls) {
@@ -517,23 +406,10 @@ export const gameUpdate = (
             ball.velocity.x = state.player.velocity.x;
             ball.velocity.y = 500;
             break;
-            // state.isBallReleased = true;
-            // state.balls[0].velocity.x = 50;
-            // state.balls[0].velocity.y = 500;
-
-            // state.balls[1].velocity.x = -50;
-            // state.balls[1].velocity.y = 500;
-
-            // state.balls[2].velocity.x = 20;
-            // state.balls[2].velocity.y = 500;
           }
         }
       }
     }
-
-    //   if (isButtonReleased(input.buttons[Buttons.MOVE_LEFT])) {
-    //     console.log("left up");
-    //   }
 
     pushObject(
       commands,
@@ -543,15 +419,13 @@ export const gameUpdate = (
       state.meshes
     );
 
-    //for (const block of state.blocks) {
     for (let b = 0; b < state.blocks.length; b++) {
       const block = state.blocks[b];
       if (block.hp > 0) {
         for (const ball of state.balls) {
           const hit = checkCircleRectangleCollision(
             ball.position,
-            //addV2(ball.position, mulV2(input.deltaTime, ball.velocity)),
-            //mulV2(input.deltaTime, subV2(block.velocity, ball.velocity)),
+
             mulV2(input.deltaTime, ball.velocity),
             10,
             block.position,
@@ -565,10 +439,9 @@ export const gameUpdate = (
             ball.position.x = hit.hitPosition.x;
             ball.position.y = hit.hitPosition.y;
             ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
-            //state.ball.velocity.y = 0;
 
             if (block.hp <= 0) {
-              emitBurst(state.trailEmitter, 15, 3, V4(0, 1, 0, 1));
+              emitBurst(state.trailEmitter, 15, 3, V4(1, 1, 1, 1));
               state.blockCount--;
               state.score += getComboScore(ball.combo);
               ball.combo++;
@@ -581,12 +454,6 @@ export const gameUpdate = (
           }
         }
 
-        // if (b === 0) {
-        //   console.log(block.position);
-        // }
-        //block.position.x += block.velocity.x * input.deltaTime;
-        //block.position.y += block.velocity.y * input.deltaTime;
-
         pushObject(
           commands,
           block.meshId,
@@ -596,8 +463,6 @@ export const gameUpdate = (
         );
       }
     }
-
-    //const newBallPos = addV2(state.ball.position, state.ball.velocity);
 
     for (const ball of state.balls) {
       if (ball.isReleased) {
@@ -641,7 +506,6 @@ export const gameUpdate = (
           ball.velocity.y = 0;
           ball.isReleased = false;
           ball.combo = 0;
-          //ball.velocity = reflectV2(ball.velocity, { x: 0, y: -1 });
         }
       } else {
         ball.position.x = state.player.position.x;
@@ -659,16 +523,11 @@ export const gameUpdate = (
 
     renderParticles(state.trailEmitter, commands, state, input.deltaTime);
 
-    //state.player.position.x += state.player.velocity.x * input.deltaTime;
-    //state.player.position.x += state.player.velocity.x;
-    //state.player.velocity.x = 0;
-
     state.remainingTime -= input.deltaTime;
     if (state.remainingTime < 0) {
+      state.remainingTime = 0;
       state.isGameOver = true;
       state.setGameOver();
     }
   }
-
-  //pushRenderGroup(commands, 1, state.blockPositions.length, state.assets);
 };

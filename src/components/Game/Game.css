@@ -1,7 +1,6 @@
 .text-canvas {
   position: absolute;
   color: black;
-  background-color: lightskyblue;
   z-index: 2;
 }
 
@@ -10,7 +9,9 @@
 }
 
 .canvas-container {
-  width: 800px;
-  margin: 0 auto;
   position: relative;
+}
+
+.modal-title {
+  font-size: 30px;
 }

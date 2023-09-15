@@ -22,29 +22,8 @@ import "./Game.css";
 import Modal from "../Modal/Modal";
 import { useGame } from "../../providers/GameProvider";
 
-// const PauseModal = () => {
-//   return (
-//     <>
-//       <h2>Paused</h2>
-//       <button type="button">Resume</button>
-//     </>
-//   );
-// };
-
-// const GameOverModal = () => {
-//   return (
-//     <>
-//       <h2>Game Over</h2>
-//       <div>Score</div>
-//       <button type="button">Main Menu</button>
-//     </>
-//   );
-// };
-
 const Game = () => {
-  //const [score, setScore] = useState(0);
-  //const [time, setTime] = useState(0);
-  const { layouts, selectedLayout } = useGame();
+  const { layouts, selectedLayout, addScore } = useGame();
   const navigate = useNavigate();
   const [pause, setPause] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -53,7 +32,6 @@ const Game = () => {
   const textContext = useRef<CanvasRenderingContext2D | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  //const canvasRect = useRef<DOMRect>({height: 0, width: 0, x: 0, y: 0, left: 0, bottom: 0, right: 0, top: 0});
   const webGPU = useRef<WebGPU | null>(null);
   const audio = useRef<Audio>(initAudio());
   const updateId = useRef<number | null>(null);
@@ -74,7 +52,7 @@ const Game = () => {
     score: 0,
     remainingTime: 120,
     playerCount: 1,
-    //playerPosition: { x: 400, y: 550 },
+
     player: {
       position: { x: 400, y: 20 },
       velocity: { x: 0, y: 0 },
@@ -82,20 +60,8 @@ const Game = () => {
       meshId: MeshId.PLAYER,
     },
     blockCount: 0,
-    // blockPositions: [
-    //   { x: 100, y: 100 },
-    //   { x: 200, y: 100 },
-    //   { x: 300, y: 100 },
-    //   { x: 400, y: 100 },
-    //   { x: 500, y: 100 },
-    //   { x: 600, y: 100 },
-    //   { x: 700, y: 100 },
-    //   { x: 100, y: 200 },
-    //   { x: 200, y: 200 },
-    //   { x: 300, y: 200 },
-    //   { x: 400, y: 200 },
-    // ],
-    blocks: Array.from({ length: 8 * 6 }, (block, index) => ({
+
+    blocks: Array.from({ length: 8 * 6 }, (_block, index) => ({
       meshId: MeshId.BLOCK,
       hp: 0,
       color: { x: 0, y: 0, z: (index + 1) / (8 * 6), w: 1 },
@@ -103,9 +69,8 @@ const Game = () => {
         x: ((index * 100) % 800) + 50,
         y: 600 - Math.floor(index / 8) * 40 - 20,
       },
-      //velocity: V2(0, -10),
     })),
-    //blocks: [],
+
     ballCount: 3,
     balls: Array.from({ length: 3 }, () => ({
       isReleased: false,
@@ -115,9 +80,7 @@ const Game = () => {
       position: { x: 0, y: 0 },
       velocity: { x: 0, y: 0 },
     })),
-    //ballPosition: { x: 0, y: 100 },
-    //ballVelocity: { x: 0, y: 0 },
-    //isBallReleased: false,
+
     playerSpeed: 600,
 
     trailEmitter: {
@@ -139,24 +102,13 @@ const Game = () => {
     },
 
     meshes: [
-      // {
-      //   vertexData: new Float32Array([0, 0, 30, 0, 0, 30, 30, 30]),
-      //   indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
-      // },
       createRectangle(100, 20),
-      // {
-      //   vertexData: new Float32Array([0, 0, 90, 0, 0, 30, 90, 30]),
-      //   indexData: new Uint32Array([0, 1, 2, 1, 3, 2]),
-      // },
       createRectangle(100, 40),
       createRectangle(10, 10),
       createCircle(10, 8),
-      //createCircle(30, 30),
     ],
     sounds: [],
     layout: null,
-    // layouts: [
-    // ],
 
     currentSound: 0,
     maxSounds: 16,
@@ -174,23 +126,13 @@ const Game = () => {
     setGameOver: () => {
       setGameOver(gameState.current.isGameOver);
     },
-
-    //soundHead: null,
-    //soundFreeHead: null,
   });
   const commands = useRef<RendererCommands>({
     count: 0,
-    // commands: Array<RendererCommand>(256).fill({
-    //   objectId: 0,
-    //   //count: 0,
-    //   vertexBuffer: new Float32Array([]),
-    //   indexBuffer: new Uint32Array([]),
-    //   position: { x: 0, y: 0 },
-    //   color: { x: 0, y: 0, z: 0, w: 0 },
-    // }),
+
     commands: Array.from({ length: 512 }, () => ({
       objectId: 0,
-      //count: 0,
+
       vertexBuffer: new Float32Array([]),
       indexBuffer: new Uint32Array([]),
       position: { x: 0, y: 0 },
@@ -271,10 +213,9 @@ const Game = () => {
       gameInput.current.deltaTime = (now - prevTime.current) * 0.001;
 
       beginRender(webGPU.current);
-      //audio.current.startTime = audio.current.context.currentTime;
+
       const targetSamples = audio.current.context.sampleRate / 15;
-      //console.log(audio.current.context.currentTime, audio.current.endTime);
-      //console.log(audio.current.endTime - audio.current.startTime);
+
       let samplesInQueue = Math.ceil(
         (audio.current.endTime - audio.current.context.currentTime) *
           audio.current.context.sampleRate
@@ -284,32 +225,23 @@ const Game = () => {
         audio.current.endTime = audio.current.context.currentTime;
       }
       const samplesToWrite = targetSamples - samplesInQueue;
-      // if (samplesToWrite <= 0) {
-      //   samplesToWrite = 0;
-      // }
-      //console.log(audio.current.startTime, audio.current.endTime);
-      //console.log(samplesToWrite);
+
       audio.current.samples.sampleCount = samplesToWrite;
       gameUpdate(
         gameState.current,
         gameInput.current,
         commands.current,
         audio.current.samples
-        //audio.current.context
       );
       fillSoundBuffer(audio.current);
       endRender(webGPU.current, commands.current);
-      //render(webGPU.current);
 
       for (let i = 0; i < gameInput.current.buttons.length; i++) {
         gameInput.current.buttons[i].changed = false;
       }
     }
 
-    //setTime(gameState.current.remainingTime);
-    //setScore(gameState.current.score);
     if (textContext.current !== null) {
-      //textContext.current.font = "18px sans-serif";
       textContext.current.clearRect(0, 0, 800, 40);
       textContext.current.fillText(gameState.current.score.toString(), 5, 1);
       textContext.current.fillText(
@@ -317,7 +249,6 @@ const Game = () => {
         700,
         1
       );
-      //textContext.current.fillText("text", 20, 40);
     }
 
     prevTime.current = now;
@@ -330,9 +261,8 @@ const Game = () => {
     window.removeEventListener("mousemove", handleMouseMove);
     window.removeEventListener("mousedown", handleMouseDown);
     window.removeEventListener("mouseup", handleMouseUp);
-    console.log(updateId.current);
+
     if (updateId.current !== null) {
-      console.log("cancel");
       cancelAnimationFrame(updateId.current);
       updateId.current = null;
     }
@@ -346,17 +276,17 @@ const Game = () => {
     window.addEventListener("mousemove", handleMouseMove);
 
     const loadData = async () => {
-      //if (!webGPU.current) {
-
       const sound1 = await loadSound(audio.current.context, "sound1.wav");
       const sound2 = await loadSound(audio.current.context, "music1.mp3");
+
       gameState.current.sounds.push(sound1);
       gameState.current.sounds.push(sound2);
+
       webGPU.current = await initWebGPU(
         canvasRef.current,
         gameState.current.meshes
       );
-      //if (!gameState.current.isInitialized) {
+
       gameState.current.layout = layouts[selectedLayout];
       gameInit(gameState.current);
 
@@ -368,9 +298,7 @@ const Game = () => {
           textContext.current.font = "18px sans-serif";
         }
       }
-      //gameState.current.isInitialized = true;
-      //}
-      //}
+
       if (!updateId.current) {
         prevTime.current = performance.now();
         updateId.current = requestAnimationFrame(update);
@@ -397,10 +325,14 @@ const Game = () => {
   }, []);
 
   const mainMenu = () => {
-    //audio.current.context.close();
-
     cleanUp();
     navigate("/");
+  };
+
+  const scoreMenu = async () => {
+    await addScore(gameState.current.score);
+    cleanUp();
+    navigate("/score");
   };
 
   const resumeGame = () => {
@@ -408,23 +340,25 @@ const Game = () => {
     setPause(false);
   };
 
-  return (
-    // <>
-    <div className="canvas-container">
+  return webGPU.current ? (
+    <div className="canvas-container ratio-wrapper">
       <Modal isOpen={pause}>
-        <div>Pause</div>
-        <button type="button" onClick={resumeGame}>
+        <div className="modal-title">Pause</div>
+        <button className="button" type="button" onClick={resumeGame}>
           Resume
         </button>
-        <button type="button" onClick={mainMenu}>
+        <button className="button" type="button" onClick={mainMenu}>
           Quit
         </button>
       </Modal>
       <Modal isOpen={gameOver}>
-        <div>Score</div>
+        <div className="modal-title">Score</div>
         <div>{gameState.current.score}</div>
-        <button type="button" onClick={mainMenu}>
-          Quit
+        <button className="button" type="button" onClick={scoreMenu}>
+          Scores
+        </button>
+        <button className="button" type="button" onClick={mainMenu}>
+          Main Menu
         </button>
       </Modal>
       <canvas
@@ -440,7 +374,11 @@ const Game = () => {
         ref={canvasRef}
       ></canvas>
     </div>
-    // {/* </> */}
+  ) : (
+    <div>
+      <div>Could not initialize WebGPU</div>
+      <div>Please use a WebGPU enabled browser</div>
+    </div>
   );
 };
 

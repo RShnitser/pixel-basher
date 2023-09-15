@@ -4,31 +4,24 @@ import {
   Route,
   Navigate,
   Outlet,
-  useLocation,
 } from "react-router-dom";
 
-import LoginUser from "./components/LoginUser/LoginUser";
-import CreateUser from "./components/CreateUser/CreateUser";
+import LoginForm from "./components/LoginForm/LoginForm";
 import GameApp from "./components/GameApp/GameApp";
 import { GameProvider } from "./providers/GameProvider";
-import { AuthProvider } from "./providers/AuthProvider";
+import useAuth, { AuthProvider } from "./providers/AuthProvider";
 import "./App.css";
+import { createUserAPI, loginUserAPI } from "./pixelbasher-api/pixelbasher-api";
 
 const PrivateRoute = () => {
-  const location = useLocation();
-
+  const { user } = useAuth();
   let isAuth = false;
 
-  const loggedInUser = localStorage.getItem("user");
-  if (loggedInUser) {
+  if (user) {
     isAuth = true;
   }
 
-  return isAuth ? (
-    <Outlet />
-  ) : (
-    <Navigate to="/login" replace state={{ from: location }} />
-  );
+  return isAuth ? <Outlet /> : <Navigate to="/login" />;
 };
 
 function App() {
@@ -37,11 +30,28 @@ function App() {
       <GameProvider>
         <BrowserRouter>
           <Routes>
-            {/* <Route path="/" element={<MainMenu />} />
-            <Route path="/game" element={<Game />} />
-            <Route path="/score" element={<Score />} /> */}
-            <Route path="/login" element={<LoginUser />} />
-            <Route path="/create" element={<CreateUser />} />
+            <Route
+              path="/login"
+              element={
+                <LoginForm
+                  title={"Login"}
+                  message={"Don't have an account?  Create one"}
+                  to={"/create"}
+                  login={loginUserAPI}
+                />
+              }
+            />
+            <Route
+              path="/create"
+              element={
+                <LoginForm
+                  title={"Create Account"}
+                  message={"Already have an account?  Login"}
+                  to={"/login"}
+                  login={createUserAPI}
+                />
+              }
+            />
             <Route element={<PrivateRoute />}>
               <Route path="*" element={<GameApp />} />
             </Route>

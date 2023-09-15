@@ -1,21 +1,23 @@
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 
 type User = {
-  name: string;
+  userName: string;
+  token: string;
 };
 
 type AuthContextType = {
-  user: User;
+  user: User | null;
+  setUser: (user: User | null) => void;
 };
 
 const AuthContext = createContext({} as AuthContextType);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
   return (
     <AuthContext.Provider
       value={{
-        user: {
-          name: "test",
-        },
+        user,
+        setUser,
       }}
     >
       {children}
@@ -27,4 +29,5 @@ const useAuth = () => {
   return useContext(AuthContext);
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export default useAuth;

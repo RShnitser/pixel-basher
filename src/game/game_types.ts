@@ -1,4 +1,5 @@
 import { v2, v4 } from "./math_types";
+import { BlockLayout } from "../pixelbasher-api/pixelbasher-api";
 
 export const Buttons = {
   MOVE_LEFT: 0,
@@ -47,22 +48,16 @@ export type GameState = {
 
   playerCount: number;
   player: Player;
-  //playerPosition: v2;
 
   blockCount: number;
   blocks: Block[];
-  //blockPositions: v2[];
 
   ballCount: number;
   balls: Ball[];
-  //ballPosition: v2;
-  //ballVelocity: v2;
 
-  //isBallReleased: boolean;
   playerSpeed: number;
 
   trailEmitter: ParticleEmitter;
-  //testSampleIndex: number;
 
   meshes: Mesh[];
   sounds: Sound[];
@@ -72,14 +67,11 @@ export type GameState = {
   maxSounds: number;
   soundQueue: QueuedSound[];
 
-  //soundHead: QueuedSound | null;
-  //soundFreeHead: QueuedSound | null;
   setPause: () => void;
   setGameOver: () => void;
 };
 
 export type Mesh = {
-  //color: Float32Array;
   vertexData: Float32Array;
   indexData: Uint32Array;
 };
@@ -94,7 +86,6 @@ export type Player = {
 export type Block = {
   color: v4;
   position: v2;
-  //velocity: v2;
   hp: number;
   meshId: MeshId;
 };
@@ -126,7 +117,6 @@ export type Particle = {
   velocity: v2;
   currentLifeTime: number;
   lifeTime: number;
-  //meshId: MeshId;
 };
 
 export type Hit = {
@@ -153,9 +143,4 @@ export type QueuedSound = {
   sampleCount: number;
   isLooping: boolean;
   isActive: boolean;
-  //next: QueuedSound | null;
-};
-
-export type BlockLayout = {
-  data: Uint8Array;
 };

@@ -36,13 +36,8 @@ export type RendererCommands = {
   commands: RendererCommand[];
 };
 
-// export type GroupCounter = {
-//     [key: number]: number;
-// }
-
 export type RendererCommand = {
   objectId: number;
-  //count: number;
   vertexBuffer: Float32Array;
   indexBuffer: Uint32Array;
   position: v2;

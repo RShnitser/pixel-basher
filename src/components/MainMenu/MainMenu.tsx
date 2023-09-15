@@ -1,54 +1,75 @@
 import { useNavigate } from "react-router-dom";
 import { useGame } from "../../providers/GameProvider";
+import useAuth from "../../providers/AuthProvider";
+import "./MainMenu.css";
 
 type MenuButtonProps = {
-  // label: string;
-  // path: string;
-  level: number;
+  levelIndex: number;
+  levelId: number;
 };
 
-const LevelButton = ({ level }: MenuButtonProps) => {
+const LevelButton = ({ levelIndex, levelId }: MenuButtonProps) => {
   const navigate = useNavigate();
-  const { setLayout } = useGame();
+  const { setLayout, setLayoutId } = useGame();
   return (
-    <>
-      <div>{`Level ${level + 1}`}</div>
-      <button
-        type="button"
-        onClick={() => {
-          setLayout(level);
-          navigate("/game");
-        }}
-      >
-        Play
-      </button>
-      <button type="button" onClick={() => navigate("/score")}>
-        Score
-      </button>
-    </>
+    <div className="menu-button">
+      <div className="menu-title">{`Level ${levelIndex + 1}`}</div>
+      <div>
+        <button
+          className="button"
+          type="button"
+          onClick={() => {
+            setLayout(levelIndex);
+            navigate("/game");
+          }}
+        >
+          Play
+        </button>
+        <button
+          className="button"
+          type="button"
+          onClick={() => {
+            setLayoutId(levelId);
+            navigate("/score");
+          }}
+        >
+          Score
+        </button>
+      </div>
+    </div>
   );
 };
 
 const MainMenu = () => {
   const navigate = useNavigate();
   const { layouts } = useGame();
+  const { setUser } = useAuth();
 
   return (
-    <>
-      <h2>Pixel Basher 9001</h2>
-      {layouts.map((layout, index) => {
-        return <LevelButton level={index}></LevelButton>;
-      })}
+    <div className="menu-container ratio-wrapper">
+      <h2 className="title">Pixel Basher 9001</h2>
+      <div className="menu-grid">
+        {layouts.map((layout, index) => {
+          return (
+            <LevelButton
+              key={`button ${index}`}
+              levelIndex={index}
+              levelId={layout.id}
+            ></LevelButton>
+          );
+        })}
+      </div>
       <button
+        className="button"
         type="button"
         onClick={() => {
-          localStorage.removeItem("user");
+          setUser(null);
           navigate("/login");
         }}
       >
         Logout
       </button>
-    </>
+    </div>
   );
 };
 

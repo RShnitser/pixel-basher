@@ -88,53 +88,6 @@ export const initWebGPU = async (
 
   const objectBuffers: ObjectBuffers[] = [];
 
-  // const playerBuffers: ObjectBuffers = {
-
-  //   vertexBuffer: createBuffer(
-  //     device,
-  //     assets[0].vertexData,
-  //     GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-  //   ),
-  //   indexBuffer: createBuffer(
-  //     device,
-  //     assets[0].indexData,
-  //     GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
-  //   ),
-  // };
-
-  // objectBuffers.push(playerBuffers);
-
-  // const blockBuffers: ObjectBuffers = {
-
-  //   vertexBuffer: createBuffer(
-  //     device,
-  //     assets[1].vertexData,
-  //     GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-  //   ),
-  //   indexBuffer: createBuffer(
-  //     device,
-  //     assets[1].indexData,
-  //     GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
-  //   ),
-  // };
-
-  // objectBuffers.push(blockBuffers);
-
-  // const ballBuffers: ObjectBuffers = {
-  //   vertexBuffer: createBuffer(
-  //     device,
-  //     assets[2].vertexData,
-  //     GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-  //   ),
-  //   indexBuffer: createBuffer(
-  //     device,
-  //     assets[2].indexData,
-  //     GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
-  //   ),
-  // };
-
-  // objectBuffers.push(ballBuffers);
-
   for (const asset of assets) {
     const buffer: ObjectBuffers = {
       vertexBuffer: createBuffer(
@@ -190,8 +143,6 @@ export const initWebGPU = async (
               operation: "add",
             },
           },
-
-          //format: "bgra8unorm",
         },
       ],
     },
@@ -204,16 +155,6 @@ export const initWebGPU = async (
   };
 
   const renderPipeline = device.createRenderPipeline(pipelineDescriptor);
-
-  // const uniformValues = new Float32Array([
-  //   0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-  // ]);
-
-  // const uniformBuffer = device.createBuffer({
-  //   size: uniformValues.byteLength,
-  //   usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-  // });
-
   const objectData = new Float32Array(16 * 1024);
 
   const objectBuffer = device.createBuffer({
@@ -221,12 +162,8 @@ export const initWebGPU = async (
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
   });
 
-  //const colorValue = uniformValues.subarray(0, 4);
-  //const matrixValue = uniformValues.subarray(4, 16);
-
   const bindGroup = device.createBindGroup({
     layout: renderPipeline.getBindGroupLayout(0),
-    //entries: [{ binding: 0, resource: { buffer: uniformBuffer } }],
     entries: [{ binding: 0, resource: { buffer: objectBuffer } }],
   });
 
@@ -239,7 +176,6 @@ export const initWebGPU = async (
         loadOp: "clear",
         storeOp: "store",
         view: undefined,
-        //view: context.getCurrentTexture().createView(),
       },
     ],
   };
@@ -247,9 +183,6 @@ export const initWebGPU = async (
   const projection = {
     data: new Float32Array([2 / 800, 0, 0, 0, 0, 2 / 600, 0, 0, -1, -1, 1, 0]),
   };
-
-  //const commandEncoder = device.createCommandEncoder();
-  //const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
 
   const result: WebGPU = {
     device,
@@ -271,10 +204,6 @@ export const initWebGPU = async (
     bindGroup,
     objectBuffer,
     objectData,
-    //uniformBuffer,
-    //uniformValues,
-    //colorValue,
-    //matrixValue,
     objectsRendered: 0,
   };
 
@@ -288,16 +217,6 @@ export const beginRender = (webGPU: WebGPU) => {
     .getCurrentTexture()
     .createView();
   webGPU.commandEncoder = webGPU.device.createCommandEncoder();
-  // const passEncoder = commandEncoder.beginRenderPass({
-  //   colorAttachments: [
-  //     {
-  //       clearValue: { r: 0.0, g: 0.5, b: 1.0, a: 1.0 },
-  //       loadOp: "clear",
-  //       storeOp: "store",
-  //       view: context.getCurrentTexture().createView(),
-  //     },
-  //   ],
-  // });
   webGPU.passEncoder = webGPU.commandEncoder.beginRenderPass(
     webGPU.renderPassDescriptor
   );
@@ -311,8 +230,6 @@ const drawRenderGroup = (
   objectId: number,
   count: number,
   indexLength: number
-  //vertextData: Float32Array,
-  //indexData: Uint32Array
 ) => {
   const objectBuffers = webGPU.objectBuffers[objectId];
   webGPU.passEncoder.setVertexBuffer(0, objectBuffers.vertexBuffer);
@@ -334,11 +251,7 @@ export const endRender = (webGPU: WebGPU, commands: RendererCommands) => {
     commands.count - 1,
     (command) => command.objectId
   );
-  //console.log(commands.commands.slice(0, commands.count));
-  // commands.commands.sort((a, b) => {
-  //   return a.objectId - b.objectId;
-  // });
-  //console.log(commands);
+
   const counter = new Map<number, RenderGroup>();
   for (let i = 0; i < commands.count; i++) {
     const command = commands.commands[i];
@@ -366,18 +279,12 @@ export const endRender = (webGPU: WebGPU, commands: RendererCommands) => {
     webGPU.objectBuffer,
     0,
     webGPU.objectData,
-    //0,
-    //webGPU.objectData.length
     0,
     commands.count * 4 * 16
-    //1 + numBlocks
   );
 
-  //console.log(counter.entries());
   for (const entry of counter.entries()) {
-    //console.log(entry);
     const [objectId, objectData] = entry;
-    //console.log(objectCount);
     drawRenderGroup(
       webGPU,
       objectId,
@@ -387,27 +294,10 @@ export const endRender = (webGPU: WebGPU, commands: RendererCommands) => {
   }
 
   commands.count = 0;
-
-  //updateBufferData(webGPU, gameState.current);
   webGPU.objectsRendered = 0;
   webGPU.passEncoder.end();
   webGPU.device.queue.submit([webGPU.commandEncoder.finish()]);
 };
-
-// export const pushRenderGroup = (
-//   commands: RendererCommands,
-//   objectId: number,
-//   count: number,
-//   assets: GameAsset[]
-// ) => {
-//   const command = commands.commands[commands.count];
-//   const asset = assets[objectId];
-//   command.objectId = objectId;
-//   command.count = count;
-//   command.vertexBuffer = asset.vertexData;
-//   command.indexBuffer = asset.indexData;
-//   commands.count++;
-// };
 
 export const pushObject = (
   commands: RendererCommands,
@@ -416,15 +306,8 @@ export const pushObject = (
   color: v4,
   assets: Mesh[]
 ) => {
-  //console.log(commands.count);
   const command = commands.commands[commands.count];
   const asset = assets[objectId];
-
-  // commands.commands[commands.count].objectId = objectId;
-  // commands.commands[commands.count].vertexBuffer = asset.vertexData;
-  // commands.commands[commands.count].indexBuffer = asset.indexData;
-  // commands.commands[commands.count].position = position;
-  // commands.commands[commands.count].color = color;
 
   command.objectId = objectId;
   command.vertexBuffer = asset.vertexData;
