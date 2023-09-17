@@ -45,7 +45,7 @@ export const loadSound = async (audio: AudioContext, name: string) => {
   }
   return {
     sampleCount: 0,
-    channelCount: 2,
+    channelCount: 0,
     samples: [],
   };
 };
