@@ -25,19 +25,23 @@ export const initAudio = () => {
 
 export const loadSound = async (audio: AudioContext, name: string) => {
   const response = await fetch(name);
-  if (response.ok) {
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await audio.decodeAudioData(arrayBuffer);
-    const result: Sound = {
-      sampleCount: audioBuffer.length,
-      channelCount: audioBuffer.numberOfChannels,
-      samples: [],
-    };
+  try {
+    if (response.ok) {
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audio.decodeAudioData(arrayBuffer);
+      const result: Sound = {
+        sampleCount: audioBuffer.length,
+        channelCount: audioBuffer.numberOfChannels,
+        samples: [],
+      };
 
-    for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
-      result.samples.push(audioBuffer.getChannelData(i));
+      for (let i = 0; i < audioBuffer.numberOfChannels; i++) {
+        result.samples.push(audioBuffer.getChannelData(i));
+      }
+      return result;
     }
-    return result;
+  } catch {
+    /* empty */
   }
   return {
     sampleCount: 0,
