@@ -383,6 +383,20 @@ const Game = () => {
   // } else if (appState === AppState.OK) {
   return (
     <div className="canvas-container ratio-wrapper">
+      <Modal isOpen={appState === AppState.LOADING}>
+        <div className="game-error ratio-wrapper">
+          <div>Loading...</div>
+        </div>
+      </Modal>
+      <Modal isOpen={appState === AppState.ERROR}>
+        <div className="game-error ratio-wrapper">
+          <div>Could not initialize WebGPU</div>
+          <div>Please use a WebGPU enabled browser</div>
+          <button className="button" type="button" onClick={mainMenu}>
+            Main Menu
+          </button>
+        </div>
+      </Modal>
       <Modal isOpen={pause}>
         <div className="modal-title">Pause</div>
         <button className="button" type="button" onClick={resumeGame}>
