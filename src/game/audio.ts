@@ -24,8 +24,8 @@ export const initAudio = () => {
 };
 
 export const loadSound = async (audio: AudioContext, name: string) => {
-  const response = await fetch(name);
   try {
+    const response = await fetch(name);
     if (response.ok) {
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await audio.decodeAudioData(arrayBuffer);
