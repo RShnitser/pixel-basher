@@ -32,7 +32,7 @@ const getComboScore = (combo: number) => {
   return result;
 };
 
-const playSound = (state: GameState, id: SoundId, isLooping = false) => {
+export const playSound = (state: GameState, id: SoundId, isLooping = false) => {
   if (state.currentSound === state.maxSounds) {
     return;
   }
@@ -358,7 +358,7 @@ const setLayout = (state: GameState) => {
 
 export const gameInit = (state: GameState) => {
   setLayout(state);
-  playSound(state, SoundId.MUSIC, true);
+  //playSound(state, SoundId.MUSIC, true);
 };
 
 export const gameUpdate = (
@@ -434,7 +434,7 @@ export const gameUpdate = (
           );
 
           if (hit.isHit) {
-            playSound(state, SoundId.HIT);
+            //playSound(state, SoundId.HIT);
             block.hp -= 1;
             ball.position.x = hit.hitPosition.x;
             ball.position.y = hit.hitPosition.y;
