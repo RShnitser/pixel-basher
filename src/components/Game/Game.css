@@ -1,6 +1,7 @@
 .text-canvas {
+  background-color: var(--dark_blue);
   position: absolute;
-  color: black;
+  /* color: white; */
   z-index: 2;
 }
 
@@ -14,4 +15,11 @@
 
 .modal-title {
   font-size: 30px;
+}
+
+.game-error {
+  font-size: 40px;
+  color: white;
+  background-color: #0832d1;
+  text-align: center;
 }

@@ -1,3 +1,7 @@
+:root {
+  --dark_blue: #102883;
+}
+
 html,
 body {
   padding: 0;
@@ -5,4 +9,5 @@ body {
 }
 body {
   font-family: "Silkscreen", cursive;
+  box-sizing: border-box;
 }

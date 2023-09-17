@@ -348,7 +348,7 @@ const setLayout = (state: GameState) => {
           const block = state.blocks[index];
           block.hp = value;
           block.position.x = ((index * 100) % 800) + 50;
-          (block.position.y = 600 - Math.floor(index / 8) * 40 - 40),
+          (block.position.y = 600 - Math.floor(index / 8) * 40 - 80),
             state.blockCount++;
         }
       }

@@ -22,11 +22,20 @@ import "./Game.css";
 import Modal from "../Modal/Modal";
 import { useGame } from "../../providers/GameProvider";
 
+const AppState = {
+  LOADING: 0,
+  OK: 1,
+  ERROR: 2,
+} as const;
+
+export type AppState = (typeof AppState)[keyof typeof AppState];
+
 const Game = () => {
   const { layouts, selectedLayout, addScore } = useGame();
   const navigate = useNavigate();
   const [pause, setPause] = useState(false);
   const [gameOver, setGameOver] = useState(false);
+  const [appState, setAppState] = useState<AppState>(AppState.LOADING);
 
   const textRef = useRef<HTMLCanvasElement | null>(null);
   const textContext = useRef<CanvasRenderingContext2D | null>(null);
@@ -242,13 +251,27 @@ const Game = () => {
     }
 
     if (textContext.current !== null) {
+      const score = gameState.current.score.toString().padStart(6, "0");
       textContext.current.clearRect(0, 0, 800, 40);
-      textContext.current.fillText(gameState.current.score.toString(), 5, 1);
+      textContext.current.fillText(`Score: ${score}`, 20, 10);
+      const time = gameState.current.remainingTime;
+
+      const mins = Math.floor(time / 60);
+      const secs = Math.floor(time - mins * 60);
+      const ms = Math.floor((time - mins * 60 - secs) * 100);
       textContext.current.fillText(
-        gameState.current.remainingTime.toFixed(2),
+        `${mins}:${secs.toString().padStart(2, "0")}:${ms
+          .toString()
+          .padStart(2, "0")}`,
         700,
-        1
+        10
       );
+      textContext.current.strokeStyle = "white";
+      textContext.current.beginPath();
+      textContext.current.moveTo(0, 57);
+      textContext.current.lineTo(800, 57);
+      textContext.current.lineWidth = 3;
+      textContext.current.stroke();
     }
 
     prevTime.current = now;
@@ -287,15 +310,20 @@ const Game = () => {
         gameState.current.meshes
       );
 
+      if (webGPU.current === null) {
+        setAppState(AppState.ERROR);
+        return;
+      }
+
       gameState.current.layout = layouts[selectedLayout];
       gameInit(gameState.current);
 
       if (textRef.current !== null) {
         textContext.current = textRef.current.getContext("2d");
         if (textContext.current) {
-          textContext.current.fillStyle = "black";
+          textContext.current.fillStyle = "white";
           textContext.current.textBaseline = "hanging";
-          textContext.current.font = "18px sans-serif";
+          textContext.current.font = "18px Silkscreen";
         }
       }
 
@@ -303,6 +331,8 @@ const Game = () => {
         prevTime.current = performance.now();
         updateId.current = requestAnimationFrame(update);
       }
+
+      setAppState(AppState.OK);
     };
 
     if (!gameState.current.isInitialized) {
@@ -340,7 +370,18 @@ const Game = () => {
     setPause(false);
   };
 
-  return webGPU.current ? (
+  // if (appState === AppState.ERROR) {
+  //   return (
+  //     <div className="game-error ratio-wrapper">
+  //       <div>Could not initialize WebGPU</div>
+  //       <div>Please use a WebGPU enabled browser</div>
+  //       <button className="button" type="button" onClick={mainMenu}>
+  //         Main Menu
+  //       </button>
+  //     </div>
+  //   );
+  // } else if (appState === AppState.OK) {
+  return (
     <div className="canvas-container ratio-wrapper">
       <Modal isOpen={pause}>
         <div className="modal-title">Pause</div>
@@ -364,7 +405,7 @@ const Game = () => {
       <canvas
         className="text-canvas"
         width={800}
-        height={20}
+        height={60}
         ref={textRef}
       ></canvas>
       <canvas
@@ -374,12 +415,10 @@ const Game = () => {
         ref={canvasRef}
       ></canvas>
     </div>
-  ) : (
-    <div>
-      <div>Could not initialize WebGPU</div>
-      <div>Please use a WebGPU enabled browser</div>
-    </div>
   );
+  //}
+
+  // return <div>Loading...</div>;
 };
 
 export default Game;

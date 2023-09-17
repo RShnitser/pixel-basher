@@ -19,6 +19,7 @@ export type GameContextType = {
   addScore: (score: number) => Promise<void>;
   scores: Score[];
   getScores: () => Promise<void>;
+  resetScores: () => void;
 };
 
 const GameContext = createContext<GameContextType>({} as GameContextType);
@@ -35,6 +36,10 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
     if (user) {
       await addScoreAPI(layoutId, score, user.token);
     }
+  };
+
+  const resetScores = () => {
+    setScores([]);
   };
 
   const getScores = async () => {
@@ -67,6 +72,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
         addScore,
         scores,
         getScores,
+        resetScores,
       }}
     >
       {children}

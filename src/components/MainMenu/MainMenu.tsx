@@ -10,7 +10,7 @@ type MenuButtonProps = {
 
 const LevelButton = ({ levelIndex, levelId }: MenuButtonProps) => {
   const navigate = useNavigate();
-  const { setLayout, setLayoutId } = useGame();
+  const { setLayout, setLayoutId, resetScores } = useGame();
   return (
     <div className="menu-button">
       <div className="menu-title">{`Level ${levelIndex + 1}`}</div>
@@ -29,6 +29,7 @@ const LevelButton = ({ levelIndex, levelId }: MenuButtonProps) => {
           className="button"
           type="button"
           onClick={() => {
+            resetScores();
             setLayoutId(levelId);
             navigate("/score");
           }}
