@@ -381,7 +381,7 @@ export const gameUpdate = (
 
     const acceleration =
       10 * (input.mouseX - state.player.position.x) -
-      1.5 * state.player.velocity.x;
+      0.5 * state.player.velocity.x;
 
     state.player.velocity.x = state.player.velocity.x + acceleration;
 
@@ -479,7 +479,7 @@ export const gameUpdate = (
           ball.position.x = hit.hitPosition.x;
           ball.position.y = hit.hitPosition.y;
           const t = (ball.position.x - state.player.position.x + 55) / 110;
-          console.log(t);
+
           const angle = lerp(2.97, 0.17, t);
           ball.velocity.x = 500 * Math.cos(angle);
           ball.velocity.y = 500 * Math.sin(angle);
