@@ -405,7 +405,7 @@ export const gameUpdate = (
             ball.isReleased = true;
             //ball.velocity.x = state.player.velocity.x;
             ball.velocity.x = 0;
-            ball.velocity.y = 300;
+            ball.velocity.y = 500;
             break;
           }
         }
@@ -481,8 +481,8 @@ export const gameUpdate = (
           const t = (ball.position.x - state.player.position.x + 55) / 110;
           console.log(t);
           const angle = lerp(2.97, 0.17, t);
-          ball.velocity.x = 300 * Math.cos(angle);
-          ball.velocity.y = 300 * Math.sin(angle);
+          ball.velocity.x = 500 * Math.cos(angle);
+          ball.velocity.y = 500 * Math.sin(angle);
           //ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
         }
 
