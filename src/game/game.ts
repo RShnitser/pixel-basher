@@ -121,13 +121,14 @@ const outputSound = (state: GameState, soundBuffer: SoundBuffer) => {
 const emitParticle = (
   emitter: ParticleEmitter,
   lifeTime: number,
+  position: v2,
   velocity: v2,
   color: v4
 ) => {
   if (!emitter.isPaused) {
-    const particle = emitter.particles[emitter.count];
-    particle.position.x = emitter.position.x;
-    particle.position.y = emitter.position.y;
+    const particle = emitter.particles[emitter.current];
+    particle.position.x = position.x;
+    particle.position.y = position.y;
     particle.velocity.x = velocity.x;
     particle.velocity.y = velocity.y;
     particle.lifeTime = lifeTime;
@@ -137,9 +138,9 @@ const emitParticle = (
     particle.color.z = color.z;
     particle.color.w = color.w;
 
-    emitter.count += 1;
-    if (emitter.count > emitter.maxCount - 1) {
-      emitter.count = 0;
+    emitter.current += 1;
+    if (emitter.current > emitter.maxCount - 1) {
+      emitter.current = 0;
     }
   }
   //}
@@ -149,13 +150,14 @@ const emitBurst = (
   emitter: ParticleEmitter,
   amount: number,
   lifeTime: number,
+  position: v2,
   color: v4
 ) => {
   for (let i = 0; i < amount; i++) {
     const vx = randomRange(-1, 1) * randomRange(100, 500);
     const vy = randomRange(-1, 1) * randomRange(100, 500);
 
-    emitParticle(emitter, lifeTime, V2(vx, vy), color);
+    emitParticle(emitter, lifeTime, position, V2(vx, vy), color);
   }
 };
 
@@ -166,12 +168,12 @@ const renderParticles = (
   deltaTime: number
 ) => {
   for (const particle of emitter.particles) {
-    particle.currentLifeTime -= deltaTime;
-    particle.color.w = particle.currentLifeTime / particle.lifeTime;
-    particle.position.x += particle.velocity.x * deltaTime;
-    particle.position.y += particle.velocity.y * deltaTime;
-
     if (particle.currentLifeTime > 0) {
+      particle.currentLifeTime -= deltaTime;
+      particle.color.w = particle.currentLifeTime / particle.lifeTime;
+      particle.position.x += particle.velocity.x * deltaTime;
+      particle.position.y += particle.velocity.y * deltaTime;
+
       pushObject(
         commands,
         MeshId.PARTICLE,
@@ -371,7 +373,7 @@ export const gameUpdate = (
   if (!state.isGameOver) {
     if (isButtonPressed(input.buttons[Buttons.PAUSE])) {
       state.isPaused = !state.isPaused;
-      state.trailEmitter.isPaused = !state.trailEmitter.isPaused;
+      state.emitter.isPaused = !state.emitter.isPaused;
       state.setPause();
     }
 
@@ -447,7 +449,7 @@ export const gameUpdate = (
             ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
 
             if (block.hp <= 0) {
-              emitBurst(state.trailEmitter, 15, 3, V4(1, 1, 1, 1));
+              emitBurst(state.emitter, 15, 3, hit.hitPosition, V4(1, 1, 1, 1));
               state.blockCount--;
               state.score += getComboScore(ball.combo);
               ball.combo++;
@@ -494,9 +496,15 @@ export const gameUpdate = (
         ball.position.x += ball.velocity.x * input.deltaTime;
         ball.position.y += ball.velocity.y * input.deltaTime;
 
-        state.trailEmitter.position.x = ball.position.x;
-        state.trailEmitter.position.y = ball.position.y;
-        emitParticle(state.trailEmitter, 0.5, V2(0, 0), V4(0.8, 0.8, 1, 1));
+        //state.trailEmitter.position.x = ball.position.x;
+        //state.trailEmitter.position.y = ball.position.y;
+        emitParticle(
+          state.emitter,
+          0.5,
+          ball.position,
+          V2(0, 0),
+          V4(0.8, 0.8, 1, 1)
+        );
 
         if (ball.position.x < 10) {
           ball.position.x = 10;
@@ -532,7 +540,7 @@ export const gameUpdate = (
       );
     }
 
-    renderParticles(state.trailEmitter, commands, state, input.deltaTime);
+    renderParticles(state.emitter, commands, state, input.deltaTime);
 
     state.remainingTime -= input.deltaTime;
     if (state.remainingTime < 0) {

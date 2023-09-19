@@ -92,14 +92,14 @@ const Game = () => {
 
     playerSpeed: 600,
 
-    trailEmitter: {
+    emitter: {
       isPaused: false,
-      count: 0,
+      current: 0,
       maxCount: 64,
-      position: V2(0, 0),
+      //position: V2(0, 0),
       color: V4(1, 1, 1, 1),
-      rate: 0,
-      timeElapsed: 0,
+      //rate: 0,
+      //timeElapsed: 0,
       meshId: MeshId.PARTICLE,
       particles: Array.from({ length: 64 }, () => ({
         position: V2(0, 0),
@@ -134,6 +134,7 @@ const Game = () => {
     },
     setGameOver: () => {
       setGameOver(gameState.current.isGameOver);
+      addScore(gameState.current.score);
     },
   });
   const commands = useRef<RendererCommands>({
@@ -360,7 +361,6 @@ const Game = () => {
   };
 
   const scoreMenu = async () => {
-    await addScore(gameState.current.score);
     cleanUp();
     navigate("/score");
   };

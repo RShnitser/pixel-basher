@@ -57,7 +57,7 @@ export type GameState = {
 
   playerSpeed: number;
 
-  trailEmitter: ParticleEmitter;
+  emitter: ParticleEmitter;
 
   meshes: Mesh[];
   sounds: Sound[];
@@ -101,12 +101,12 @@ export type Ball = {
 
 export type ParticleEmitter = {
   isPaused: boolean;
-  count: number;
+  current: number;
   maxCount: number;
   color: v4;
-  position: v2;
-  rate: number;
-  timeElapsed: number;
+  //position: v2;
+  //rate: number;
+  //timeElapsed: number;
   meshId: MeshId;
   particles: Particle[];
 };
