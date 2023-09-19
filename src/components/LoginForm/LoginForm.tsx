@@ -3,6 +3,7 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import "./LoginForm.css";
 import { Response, User } from "../../pixelbasher-api/pixelbasher-api";
 import useAuth from "../../providers/AuthProvider";
+import useAudio from "../../providers/AudioProvider";
 
 type LoginProps = {
   title: string;
@@ -15,6 +16,7 @@ const LoginForm = ({ title, message, to, login }: LoginProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { setUser } = useAuth();
+  const { play } = useAudio();
 
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
@@ -47,6 +49,7 @@ const LoginForm = ({ title, message, to, login }: LoginProps) => {
       if (result.success) {
         setUser({ userName: result.data.userName, token: result.data.token });
         const { from } = location.state || { from: { pathname: "/" } };
+        play();
         navigate(from, { replace: true });
       } else {
         setError(result.message);

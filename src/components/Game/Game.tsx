@@ -21,6 +21,7 @@ import { fillSoundBuffer, initAudio, Audio, loadSound } from "../../game/audio";
 import "./Game.css";
 import Modal from "../Modal/Modal";
 import { useGame } from "../../providers/GameProvider";
+import useAudio from "../../providers/AudioProvider";
 
 const AppState = {
   LOADING: 0,
@@ -32,6 +33,7 @@ export type AppState = (typeof AppState)[keyof typeof AppState];
 
 const Game = () => {
   const { layouts, selectedLayout, addScore } = useGame();
+  const { play } = useAudio();
   const navigate = useNavigate();
   const [pause, setPause] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -357,17 +359,19 @@ const Game = () => {
 
   const mainMenu = () => {
     cleanUp();
+    play();
     navigate("/");
   };
 
   const scoreMenu = async () => {
     cleanUp();
+    play();
     navigate("/score");
   };
 
   const resumeGame = () => {
-    gameState.current.isPaused = false;
     setPause(false);
+    gameState.current.isPaused = false;
   };
 
   // if (appState === AppState.ERROR) {

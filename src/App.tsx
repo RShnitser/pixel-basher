@@ -12,6 +12,7 @@ import { GameProvider } from "./providers/GameProvider";
 import useAuth, { AuthProvider } from "./providers/AuthProvider";
 import "./App.css";
 import { createUserAPI, loginUserAPI } from "./pixelbasher-api/pixelbasher-api";
+import { AudioProvider } from "./providers/AudioProvider";
 
 const PrivateRoute = () => {
   const { user } = useAuth();
@@ -28,35 +29,37 @@ function App() {
   return (
     <AuthProvider>
       <GameProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <LoginForm
-                  title={"Login"}
-                  message={"Don't have an account?  Create one"}
-                  to={"/create"}
-                  login={loginUserAPI}
-                />
-              }
-            />
-            <Route
-              path="/create"
-              element={
-                <LoginForm
-                  title={"Create Account"}
-                  message={"Already have an account?  Login"}
-                  to={"/login"}
-                  login={createUserAPI}
-                />
-              }
-            />
-            <Route element={<PrivateRoute />}>
-              <Route path="*" element={<GameApp />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+        <AudioProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route
+                path="/login"
+                element={
+                  <LoginForm
+                    title={"Login"}
+                    message={"Don't have an account?  Create one"}
+                    to={"/create"}
+                    login={loginUserAPI}
+                  />
+                }
+              />
+              <Route
+                path="/create"
+                element={
+                  <LoginForm
+                    title={"Create Account"}
+                    message={"Already have an account?  Login"}
+                    to={"/login"}
+                    login={createUserAPI}
+                  />
+                }
+              />
+              <Route element={<PrivateRoute />}>
+                <Route path="*" element={<GameApp />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </AudioProvider>
       </GameProvider>
     </AuthProvider>
   );

@@ -372,8 +372,8 @@ export const gameUpdate = (
   outputSound(state, soundBuffer);
   if (!state.isGameOver) {
     if (isButtonPressed(input.buttons[Buttons.PAUSE])) {
-      state.isPaused = !state.isPaused;
       state.emitter.isPaused = !state.emitter.isPaused;
+      state.isPaused = !state.isPaused;
       state.setPause();
     }
 
