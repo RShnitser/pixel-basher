@@ -12,7 +12,7 @@ import {
 import { pushObject } from "./renderer";
 import { RendererCommands } from "./renderer_types";
 import { v2, v4 } from "./math_types";
-import { mulV2, randomRange, reflectV2, V2, V4, lerp } from "./math";
+import { mulV2, randomRange, reflectV2, V2, V4, lerp, clamp } from "./math";
 import { Hit } from "./game_types";
 
 const comboScore = [
@@ -322,10 +322,10 @@ const isButtonPressed = (button: ButtonState) => {
   return result;
 };
 
-// const isButtonReleased = (button: ButtonState) => {
-//   const result = !button.isDown && button.changed;
-//   return result;
-// };
+const isButtonReleased = (button: ButtonState) => {
+  const result = !button.isDown && button.changed;
+  return result;
+};
 
 const resetBalls = (state: GameState) => {
   for (const ball of state.balls) {
@@ -358,7 +358,7 @@ const setLayout = (state: GameState) => {
 
 export const gameInit = (state: GameState) => {
   setLayout(state);
-  //playSound(state, SoundId.MUSIC, true);
+  playSound(state, SoundId.MUSIC, true);
 };
 
 export const gameUpdate = (
@@ -399,13 +399,18 @@ export const gameUpdate = (
     }
 
     if (!state.isPaused) {
-      if (isButtonPressed(input.buttons[Buttons.RELEASE_BALL])) {
+      if (isButtonReleased(input.buttons[Buttons.RELEASE_BALL])) {
         for (const ball of state.balls) {
           if (!ball.isReleased) {
             ball.isReleased = true;
+            const t =
+              (clamp(state.player.velocity.x, -6000, 6000) + 6000) / 12000;
+            const angle = lerp(2.97, 0.17, t);
+            ball.velocity.x = 500 * Math.cos(angle);
+            ball.velocity.y = 500 * Math.sin(angle);
             //ball.velocity.x = state.player.velocity.x;
-            ball.velocity.x = 0;
-            ball.velocity.y = 500;
+            //ball.velocity.x = 0;
+            //ball.velocity.y = 500;
             break;
           }
         }
@@ -435,7 +440,7 @@ export const gameUpdate = (
           );
 
           if (hit.isHit) {
-            //playSound(state, SoundId.HIT);
+            playSound(state, SoundId.HIT);
             block.hp -= 1;
             ball.position.x = hit.hitPosition.x;
             ball.position.y = hit.hitPosition.y;
@@ -503,8 +508,8 @@ export const gameUpdate = (
           ball.velocity = reflectV2(ball.velocity, { x: -1, y: 0 });
         }
 
-        if (ball.position.y > 590) {
-          ball.position.y = 590;
+        if (ball.position.y > 530) {
+          ball.position.y = 530;
           ball.velocity = reflectV2(ball.velocity, { x: 0, y: -1 });
         }
         if (ball.position.y < 0) {

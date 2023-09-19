@@ -121,6 +121,10 @@ export const min = (a: number, b: number) => {
   return a < b ? a : b;
 };
 
+export const clamp = (number: number, minimum: number, maximum: number) => {
+  return min(max(number, minimum), maximum);
+};
+
 export const randomRange = (min: number, max: number) => {
   const result = Math.random() * (max - min) + min;
   return result;

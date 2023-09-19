@@ -260,10 +260,10 @@ const Game = () => {
       const secs = Math.floor(time - mins * 60);
       const ms = Math.floor((time - mins * 60 - secs) * 100);
       textContext.current.fillText(
-        `${mins}:${secs.toString().padStart(2, "0")}:${ms
+        `Remaining Time: ${mins}:${secs.toString().padStart(2, "0")}:${ms
           .toString()
           .padStart(2, "0")}`,
-        700,
+        510,
         10
       );
       textContext.current.strokeStyle = "white";
@@ -299,7 +299,7 @@ const Game = () => {
     window.addEventListener("mousemove", handleMouseMove);
 
     const loadData = async () => {
-      const sound1 = await loadSound(audio.current.context, "sound1.wav");
+      const sound1 = await loadSound(audio.current.context, "sound1.ogg");
       const sound2 = await loadSound(audio.current.context, "music1.mp3");
 
       gameState.current.sounds.push(sound1);
