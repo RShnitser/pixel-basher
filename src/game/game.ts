@@ -12,7 +12,7 @@ import {
 import { pushObject } from "./renderer";
 import { RendererCommands } from "./renderer_types";
 import { v2, v4 } from "./math_types";
-import { mulV2, randomRange, reflectV2, V2, V4 } from "./math";
+import { mulV2, randomRange, reflectV2, V2, V4, lerp } from "./math";
 import { Hit } from "./game_types";
 
 const comboScore = [
@@ -403,8 +403,9 @@ export const gameUpdate = (
         for (const ball of state.balls) {
           if (!ball.isReleased) {
             ball.isReleased = true;
-            ball.velocity.x = state.player.velocity.x;
-            ball.velocity.y = 500;
+            //ball.velocity.x = state.player.velocity.x;
+            ball.velocity.x = 0;
+            ball.velocity.y = 300;
             break;
           }
         }
@@ -477,7 +478,12 @@ export const gameUpdate = (
         if (hit.isHit) {
           ball.position.x = hit.hitPosition.x;
           ball.position.y = hit.hitPosition.y;
-          ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
+          const t = (ball.position.x - state.player.position.x + 55) / 110;
+          console.log(t);
+          const angle = lerp(2.97, 0.17, t);
+          ball.velocity.x = 300 * Math.cos(angle);
+          ball.velocity.y = 300 * Math.sin(angle);
+          //ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
         }
 
         ball.position.x += ball.velocity.x * input.deltaTime;
