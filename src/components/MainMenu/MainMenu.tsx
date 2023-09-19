@@ -12,7 +12,7 @@ type MenuButtonProps = {
 const LevelButton = ({ levelIndex, levelId }: MenuButtonProps) => {
   const navigate = useNavigate();
   const { setLayout, setLayoutId, resetScores } = useGame();
-  const [audio] = useState(new Audio("public/menu.mp3"));
+  const [audio] = useState(new Audio("menu.mp3"));
 
   useEffect(() => {
     audio.loop = true;
