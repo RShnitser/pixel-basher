@@ -11,7 +11,7 @@ import useAuth from "./AuthProvider";
 
 export type GameContextType = {
   selectedLayout: number;
-  layoutId: number;
+  layoutId: number | null;
   layouts: BlockLayout[];
   getLayouts: () => Promise<void>;
   setLayout: (index: number) => void;
@@ -28,12 +28,12 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
 
   const [layoutIndex, setLayoutIndex] = useState(0);
-  const [layoutId, setLayoutId] = useState(-1);
+  const [layoutId, setLayoutId] = useState<number | null>(null);
   const [layouts, setLayouts] = useState<BlockLayout[]>([]);
   const [scores, setScores] = useState<Score[]>([]);
 
   const addScore = async (score: number) => {
-    if (user) {
+    if (user && layoutId) {
       await addScoreAPI(layoutId, score, user.token);
     }
   };
@@ -43,7 +43,7 @@ export const GameProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const getScores = async () => {
-    if (user) {
+    if (user && layoutId) {
       const result = await getScoresAPI(layoutId, user.token);
       if (result.success) {
         setScores(result.data);

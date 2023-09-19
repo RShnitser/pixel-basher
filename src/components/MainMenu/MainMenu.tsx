@@ -20,6 +20,7 @@ const LevelButton = ({ levelIndex, levelId }: MenuButtonProps) => {
           type="button"
           onClick={() => {
             setLayout(levelIndex);
+            setLayoutId(levelId);
             navigate("/game");
           }}
         >
