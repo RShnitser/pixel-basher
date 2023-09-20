@@ -14,6 +14,24 @@ import { RendererCommands } from "./renderer_types";
 import { v2, v4 } from "./math_types";
 import { mulV2, randomRange, reflectV2, V2, V4, lerp, clamp } from "./math";
 import { Hit } from "./game_types";
+import {
+  BALL_RADIUS,
+  BALL_SPEED,
+  BLOCK_COLS,
+  BLOCK_HEIGHT,
+  BLOCK_ROWS,
+  BLOCK_WIDTH,
+  MAX_ANGLE,
+  MAX_BLOCKS,
+  MAX_VELOCITY,
+  MIN_ANGLE,
+  MIN_VELOCITY,
+  PLAYER_HEIGHT,
+  PLAYER_WIDTH,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+  UI_HEIGHT,
+} from "./game_consts";
 
 const comboScore = [
   1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7, 7,
@@ -22,7 +40,7 @@ const comboScore = [
   12, 12, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
   13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 15,
   15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
-];
+] as const;
 
 const getComboScore = (combo: number) => {
   if (combo > 120) {
@@ -90,33 +108,28 @@ const outputSound = (state: GameState, soundBuffer: SoundBuffer) => {
   }
 };
 
-// const createParticleEmitter = (
-//   color: v4,
-//   position: v2,
-//   maxCount: number,
-//   rate: number,
-//   meshId: MeshId
-// ) => {
-//   const result: ParticleEmitter = {
-//     isPaused: false,
-//     color,
-//     maxCount,
-//     count: 0,
-//     position,
-//     rate,
-//     timeElapsed: 0,
-//     meshId,
-//     particles: Array.from({ length: maxCount }, () => ({
-//       color: V4(0, 0, 0, 0),
-//       position: V2(0, 0),
-//       velocity: V2(0, 0),
-//       currentLifeTime: 0,
-//       lifeTime: 0,
-//     })),
-//   };
+export const createParticleEmitter = (
+  color: v4,
+  maxCount: number,
+  meshId: MeshId
+) => {
+  const result: ParticleEmitter = {
+    isPaused: false,
+    color,
+    maxCount,
+    current: 0,
+    meshId,
+    particles: Array.from({ length: maxCount }, () => ({
+      color: V4(0, 0, 0, 0),
+      position: V2(0, 0),
+      velocity: V2(0, 0),
+      currentLifeTime: 0,
+      lifeTime: 0,
+    })),
+  };
 
-//   return result;
-// };
+  return result;
+};
 
 const emitParticle = (
   emitter: ParticleEmitter,
@@ -319,10 +332,10 @@ const checkCircleRectangleCollision = (
 //   return result;
 // };
 
-const isButtonPressed = (button: ButtonState) => {
-  const result = button.isDown && button.changed;
-  return result;
-};
+// const isButtonPressed = (button: ButtonState) => {
+//   const result = button.isDown && button.changed;
+//   return result;
+// };
 
 const isButtonReleased = (button: ButtonState) => {
   const result = !button.isDown && button.changed;
@@ -340,18 +353,27 @@ const resetBalls = (state: GameState) => {
 const setLayout = (state: GameState) => {
   if (state.layout !== null) {
     const layout = state.layout.data;
-    state.blockCount = 0;
-    for (let x = 0; x < 8; x++) {
-      for (let y = 0; y < 6; y++) {
-        const index = y * 8 + x;
+    state.blocksRemaining = 0;
+    for (let x = 0; x < BLOCK_COLS; x++) {
+      for (let y = 0; y < BLOCK_ROWS; y++) {
+        const index = y * BLOCK_COLS + x;
 
         const value = layout[index];
         if (value) {
           const block = state.blocks[index];
           block.hp = value;
-          block.position.x = ((index * 100) % 800) + 50;
-          (block.position.y = 600 - Math.floor(index / 8) * 40 - 80),
-            state.blockCount++;
+          //{ x: 0, y: 0, z: (index + 1) / (8 * 6), w: 1 },
+          block.color.x = 0;
+          block.color.y = 0;
+          block.color.z = (index + 1) / MAX_BLOCKS;
+          block.color.w = 1;
+          block.position.x =
+            ((index * BLOCK_WIDTH) % SCREEN_WIDTH) + 0.5 * BLOCK_WIDTH;
+          block.position.y =
+            SCREEN_HEIGHT -
+            Math.floor(index / BLOCK_COLS) * BLOCK_HEIGHT -
+            (UI_HEIGHT + 0.5 * BLOCK_HEIGHT);
+          state.blocksRemaining++;
         }
       }
     }
@@ -371,11 +393,15 @@ export const gameUpdate = (
 ) => {
   outputSound(state, soundBuffer);
   if (!state.isGameOver) {
-    if (isButtonPressed(input.buttons[Buttons.PAUSE])) {
-      state.emitter.isPaused = !state.emitter.isPaused;
-      state.isPaused = !state.isPaused;
-      state.setPause();
-    }
+    //disabled pause because of potential exploits
+    //ball launches when unpause with mouse click
+    //paddle moves to mouse position
+
+    // if (isButtonPressed(input.buttons[Buttons.PAUSE])) {
+    //   state.emitter.isPaused = !state.emitter.isPaused;
+    //   state.isPaused = !state.isPaused;
+    //   state.setPause();
+    // }
 
     if (state.isPaused) {
       input.deltaTime = 0;
@@ -392,12 +418,14 @@ export const gameUpdate = (
       state.player.velocity.x * input.deltaTime +
       0.5 * input.deltaTime * input.deltaTime * acceleration;
 
-    if (state.player.position.x < 50) {
-      state.player.position.x = 50;
+    const playerLeftBoundary = PLAYER_WIDTH * 0.5;
+    if (state.player.position.x < playerLeftBoundary) {
+      state.player.position.x = playerLeftBoundary;
     }
 
-    if (state.player.position.x > 750) {
-      state.player.position.x = 750;
+    const playerRightBoundary = SCREEN_WIDTH - PLAYER_WIDTH * 0.5;
+    if (state.player.position.x > playerRightBoundary) {
+      state.player.position.x = playerRightBoundary;
     }
 
     if (!state.isPaused) {
@@ -406,10 +434,12 @@ export const gameUpdate = (
           if (!ball.isReleased) {
             ball.isReleased = true;
             const t =
-              (clamp(state.player.velocity.x, -6000, 6000) + 6000) / 12000;
-            const angle = lerp(2.97, 0.17, t);
-            ball.velocity.x = 500 * Math.cos(angle);
-            ball.velocity.y = 500 * Math.sin(angle);
+              (clamp(state.player.velocity.x, MIN_VELOCITY, MAX_VELOCITY) +
+                MAX_VELOCITY) /
+              (2 * MAX_VELOCITY);
+            const angle = lerp(MAX_ANGLE, MIN_ANGLE, t);
+            ball.velocity.x = BALL_SPEED * Math.cos(angle);
+            ball.velocity.y = BALL_SPEED * Math.sin(angle);
             //ball.velocity.x = state.player.velocity.x;
             //ball.velocity.x = 0;
             //ball.velocity.y = 500;
@@ -435,10 +465,12 @@ export const gameUpdate = (
             ball.position,
 
             mulV2(input.deltaTime, ball.velocity),
-            10,
+            BALL_RADIUS,
             block.position,
-            90,
-            30
+            BLOCK_WIDTH,
+            BLOCK_HEIGHT
+            //90,
+            //30
           );
 
           if (hit.isHit) {
@@ -450,11 +482,11 @@ export const gameUpdate = (
 
             if (block.hp <= 0) {
               emitBurst(state.emitter, 15, 3, hit.hitPosition, V4(1, 1, 1, 1));
-              state.blockCount--;
+              state.blocksRemaining--;
               state.score += getComboScore(ball.combo);
               ball.combo++;
 
-              if (state.blockCount === 0) {
+              if (state.blocksRemaining === 0) {
                 resetBalls(state);
                 setLayout(state);
               }
@@ -477,19 +509,24 @@ export const gameUpdate = (
         const hit = checkCircleRectangleCollision(
           ball.position,
           mulV2(input.deltaTime, ball.velocity),
-          10,
+          BALL_RADIUS,
           state.player.position,
-          90,
-          30
+          PLAYER_WIDTH,
+          PLAYER_HEIGHT
+          //90,
+          //30
         );
         if (hit.isHit) {
           ball.position.x = hit.hitPosition.x;
           ball.position.y = hit.hitPosition.y;
-          const t = (ball.position.x - state.player.position.x + 55) / 110;
+          const fullWidth = PLAYER_WIDTH + BALL_RADIUS;
+          const halfWidth = fullWidth * 0.5;
+          const t =
+            (ball.position.x - state.player.position.x + halfWidth) / fullWidth;
 
-          const angle = lerp(2.97, 0.17, t);
-          ball.velocity.x = 500 * Math.cos(angle);
-          ball.velocity.y = 500 * Math.sin(angle);
+          const angle = lerp(MAX_ANGLE, MIN_ANGLE, t);
+          ball.velocity.x = BALL_SPEED * Math.cos(angle);
+          ball.velocity.y = BALL_SPEED * Math.sin(angle);
           //ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
         }
 
@@ -506,18 +543,20 @@ export const gameUpdate = (
           V4(0.8, 0.8, 1, 1)
         );
 
-        if (ball.position.x < 10) {
-          ball.position.x = 10;
+        if (ball.position.x < BALL_RADIUS) {
+          ball.position.x = BALL_RADIUS;
           ball.velocity = reflectV2(ball.velocity, { x: 1, y: 0 });
         }
 
-        if (ball.position.x > 790) {
-          ball.position.x = 790;
+        const rightBound = SCREEN_WIDTH - BALL_RADIUS;
+        if (ball.position.x > rightBound) {
+          ball.position.x = rightBound;
           ball.velocity = reflectV2(ball.velocity, { x: -1, y: 0 });
         }
 
-        if (ball.position.y > 530) {
-          ball.position.y = 530;
+        const upperBound = SCREEN_HEIGHT - UI_HEIGHT - BALL_RADIUS;
+        if (ball.position.y > upperBound) {
+          ball.position.y = upperBound;
           ball.velocity = reflectV2(ball.velocity, { x: 0, y: -1 });
         }
         if (ball.position.y < 0) {
@@ -527,8 +566,10 @@ export const gameUpdate = (
           ball.combo = 0;
         }
       } else {
+        const ballResetY =
+          state.player.position.y + 0.5 * PLAYER_HEIGHT + BALL_RADIUS;
         ball.position.x = state.player.position.x;
-        ball.position.y = state.player.position.y + 25;
+        ball.position.y = ballResetY;
       }
 
       pushObject(

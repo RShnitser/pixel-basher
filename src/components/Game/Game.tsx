@@ -9,6 +9,7 @@ import {
 } from "../../game/game_types";
 import {
   createCircle,
+  createParticleEmitter,
   createRectangle,
   gameInit,
   gameUpdate,
@@ -22,6 +23,22 @@ import "./Game.css";
 import Modal from "../Modal/Modal";
 import { useGame } from "../../providers/GameProvider";
 import useAudio from "../../providers/AudioProvider";
+import {
+  BALL_RADIUS,
+  BLOCK_HEIGHT,
+  BLOCK_WIDTH,
+  MAX_BALLS,
+  MAX_BLOCKS,
+  MAX_COMMANDS,
+  MAX_PARTICLES,
+  MAX_SOUNDS,
+  PARTICLE_SIZE,
+  PLAYER_HEIGHT,
+  PLAYER_WIDTH,
+  SCREEN_HEIGHT,
+  SCREEN_WIDTH,
+  UI_HEIGHT,
+} from "../../game/game_consts";
 
 const AppState = {
   LOADING: 0,
@@ -62,7 +79,6 @@ const Game = () => {
     isPaused: false,
     score: 0,
     remainingTime: 120,
-    playerCount: 1,
 
     player: {
       position: { x: 400, y: 20 },
@@ -70,60 +86,42 @@ const Game = () => {
       color: { x: 0, y: 0, z: 1, w: 1 },
       meshId: MeshId.PLAYER,
     },
-    blockCount: 0,
+    blocksRemaining: 0,
 
-    blocks: Array.from({ length: 8 * 6 }, (_block, index) => ({
+    blocks: Array.from({ length: MAX_BLOCKS }, () => ({
       meshId: MeshId.BLOCK,
       hp: 0,
-      color: { x: 0, y: 0, z: (index + 1) / (8 * 6), w: 1 },
-      position: {
-        x: ((index * 100) % 800) + 50,
-        y: 600 - Math.floor(index / 8) * 40 - 20,
-      },
+      color: V4(0, 0, 0, 0),
+      position: V2(0, 0),
     })),
 
-    ballCount: 3,
-    balls: Array.from({ length: 3 }, () => ({
+    balls: Array.from({ length: MAX_BALLS }, () => ({
       isReleased: false,
       combo: 0,
       meshId: MeshId.BALL,
-      color: { x: 1, y: 1, z: 1, w: 1 },
-      position: { x: 0, y: 0 },
-      velocity: { x: 0, y: 0 },
+      color: V4(1, 1, 1, 1),
+      position: V2(0, 0),
+      velocity: V2(0, 0),
     })),
 
-    playerSpeed: 600,
-
-    emitter: {
-      isPaused: false,
-      current: 0,
-      maxCount: 64,
-      //position: V2(0, 0),
-      color: V4(1, 1, 1, 1),
-      //rate: 0,
-      //timeElapsed: 0,
-      meshId: MeshId.PARTICLE,
-      particles: Array.from({ length: 64 }, () => ({
-        position: V2(0, 0),
-        velocity: V2(0, 0),
-        color: V4(0, 0, 0, 0),
-        currentLifeTime: 0,
-        lifeTime: 0,
-      })),
-    },
+    emitter: createParticleEmitter(
+      V4(1, 1, 1, 1),
+      MAX_PARTICLES,
+      MeshId.PARTICLE
+    ),
 
     meshes: [
-      createRectangle(100, 20),
-      createRectangle(100, 40),
-      createRectangle(10, 10),
-      createCircle(10, 8),
+      createRectangle(PLAYER_WIDTH, PLAYER_HEIGHT),
+      createRectangle(BLOCK_WIDTH, BLOCK_HEIGHT),
+      createRectangle(PARTICLE_SIZE, PARTICLE_SIZE),
+      createCircle(BALL_RADIUS, 8),
     ],
     sounds: [],
     layout: null,
 
     currentSound: 0,
-    maxSounds: 16,
-    soundQueue: Array.from({ length: 16 }, () => ({
+    maxSounds: MAX_SOUNDS,
+    soundQueue: Array.from({ length: MAX_SOUNDS }, () => ({
       soundId: 0,
       samplesRead: 0,
       sampleCount: 0,
@@ -142,13 +140,12 @@ const Game = () => {
   const commands = useRef<RendererCommands>({
     count: 0,
 
-    commands: Array.from({ length: 512 }, () => ({
+    commands: Array.from({ length: MAX_COMMANDS }, () => ({
       objectId: 0,
-
       vertexBuffer: new Float32Array([]),
       indexBuffer: new Uint32Array([]),
-      position: { x: 0, y: 0 },
-      color: { x: 0, y: 0, z: 0, w: 0 },
+      position: V2(0, 0),
+      color: V4(0, 0, 0, 0),
     })),
   });
 
@@ -213,7 +210,7 @@ const Game = () => {
     if (canvasRef.current !== null) {
       const rect = canvasRef.current.getBoundingClientRect();
       gameInput.current.mouseX = e.clientX - rect.left;
-      gameInput.current.mouseY = 600 - (e.clientY - rect.top);
+      gameInput.current.mouseY = SCREEN_HEIGHT - (e.clientY - rect.top);
       //console.log(gameInput.current.mouseY);
     }
   };
@@ -255,7 +252,7 @@ const Game = () => {
 
     if (textContext.current !== null) {
       const score = gameState.current.score.toString().padStart(6, "0");
-      textContext.current.clearRect(0, 0, 800, 40);
+      textContext.current.clearRect(0, 0, SCREEN_WIDTH, UI_HEIGHT);
       textContext.current.fillText(`Score: ${score}`, 20, 10);
       const time = gameState.current.remainingTime;
 
@@ -374,17 +371,6 @@ const Game = () => {
     gameState.current.isPaused = false;
   };
 
-  // if (appState === AppState.ERROR) {
-  //   return (
-  //     <div className="game-error ratio-wrapper">
-  //       <div>Could not initialize WebGPU</div>
-  //       <div>Please use a WebGPU enabled browser</div>
-  //       <button className="button" type="button" onClick={mainMenu}>
-  //         Main Menu
-  //       </button>
-  //     </div>
-  //   );
-  // } else if (appState === AppState.OK) {
   return (
     <div className="canvas-container ratio-wrapper">
       <Modal isOpen={appState === AppState.LOADING}>
@@ -422,21 +408,18 @@ const Game = () => {
       </Modal>
       <canvas
         className="text-canvas"
-        width={800}
-        height={60}
+        width={SCREEN_WIDTH}
+        height={UI_HEIGHT}
         ref={textRef}
       ></canvas>
       <canvas
         className="game-canvas"
-        width={800}
-        height={600}
+        width={SCREEN_WIDTH}
+        height={SCREEN_HEIGHT}
         ref={canvasRef}
       ></canvas>
     </div>
   );
-  //}
-
-  // return <div>Loading...</div>;
 };
 
 export default Game;

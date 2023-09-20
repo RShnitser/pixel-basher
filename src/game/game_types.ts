@@ -46,16 +46,16 @@ export type GameState = {
   remainingTime: number;
   score: number;
 
-  playerCount: number;
+  //playerCount: number;
   player: Player;
 
-  blockCount: number;
+  blocksRemaining: number;
   blocks: Block[];
 
-  ballCount: number;
+  //ballCount: number;
   balls: Ball[];
 
-  playerSpeed: number;
+  //playerSpeed: number;
 
   emitter: ParticleEmitter;
 
