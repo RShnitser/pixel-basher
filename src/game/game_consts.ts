@@ -1,3 +1,4 @@
+export const TIME = 120; //seconds
 export const BLOCK_COLS = 8;
 export const BLOCK_ROWS = 6;
 export const MAX_BLOCKS = 48;
@@ -9,7 +10,6 @@ export const MAX_VELOCITY = 6000; //pixels per second
 export const MIN_VELOCITY = -MAX_VELOCITY; //pixels per second
 
 export const MAX_PARTICLES = 64;
-//export const COLOR_WHITE = { x: 1, y: 1, z: 1, w: 1 } as const;
 
 export const PLAYER_WIDTH = 100; //pixels
 export const PLAYER_HEIGHT = 20; //pixels

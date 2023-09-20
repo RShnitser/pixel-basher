@@ -307,6 +307,8 @@ const checkCircleRectangleCollision = (
   return result;
 };
 
+//useful functions but commented out because not used
+
 // const checkCircleRectangleCollisionDiscreet = (
 //   cc: v2,
 //   cr: number,
@@ -362,7 +364,6 @@ const setLayout = (state: GameState) => {
         if (value) {
           const block = state.blocks[index];
           block.hp = value;
-          //{ x: 0, y: 0, z: (index + 1) / (8 * 6), w: 1 },
           block.color.x = 0;
           block.color.y = 0;
           block.color.z = (index + 1) / MAX_BLOCKS;
@@ -440,9 +441,6 @@ export const gameUpdate = (
             const angle = lerp(MAX_ANGLE, MIN_ANGLE, t);
             ball.velocity.x = BALL_SPEED * Math.cos(angle);
             ball.velocity.y = BALL_SPEED * Math.sin(angle);
-            //ball.velocity.x = state.player.velocity.x;
-            //ball.velocity.x = 0;
-            //ball.velocity.y = 500;
             break;
           }
         }
@@ -469,8 +467,6 @@ export const gameUpdate = (
             block.position,
             BLOCK_WIDTH,
             BLOCK_HEIGHT
-            //90,
-            //30
           );
 
           if (hit.isHit) {
@@ -513,8 +509,6 @@ export const gameUpdate = (
           state.player.position,
           PLAYER_WIDTH,
           PLAYER_HEIGHT
-          //90,
-          //30
         );
         if (hit.isHit) {
           ball.position.x = hit.hitPosition.x;
@@ -527,14 +521,11 @@ export const gameUpdate = (
           const angle = lerp(MAX_ANGLE, MIN_ANGLE, t);
           ball.velocity.x = BALL_SPEED * Math.cos(angle);
           ball.velocity.y = BALL_SPEED * Math.sin(angle);
-          //ball.velocity = reflectV2(ball.velocity, hit.hitNormal);
         }
 
         ball.position.x += ball.velocity.x * input.deltaTime;
         ball.position.y += ball.velocity.y * input.deltaTime;
 
-        //state.trailEmitter.position.x = ball.position.x;
-        //state.trailEmitter.position.y = ball.position.y;
         emitParticle(
           state.emitter,
           0.5,

@@ -37,6 +37,7 @@ import {
   PLAYER_WIDTH,
   SCREEN_HEIGHT,
   SCREEN_WIDTH,
+  TIME,
   UI_HEIGHT,
 } from "../../game/game_consts";
 
@@ -78,7 +79,7 @@ const Game = () => {
     isGameOver: false,
     isPaused: false,
     score: 0,
-    remainingTime: 120,
+    remainingTime: TIME,
 
     player: {
       position: { x: 400, y: 20 },
